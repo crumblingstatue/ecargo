@@ -1,20 +1,12 @@
-use {crate::project::Project, eframe::egui, egui_modal::Modal, std::path::Path};
+use {
+    crate::{project::Project, ui::Gui},
+    eframe::egui,
+    std::path::Path,
+};
 
 pub struct App {
-    project: Option<Project>,
-    gui: Gui,
-}
-
-pub struct Gui {
-    modal: Modal,
-}
-
-impl Gui {
-    pub fn new(egui_ctx: &egui::Context) -> Self {
-        Self {
-            modal: Modal::new(egui_ctx, "modal_dialog"),
-        }
-    }
+    pub project: Option<Project>,
+    pub gui: Gui,
 }
 
 impl App {
@@ -27,7 +19,10 @@ impl App {
 
     pub(crate) fn load_project(&mut self, path: &Path) {
         match Project::load(path) {
-            Ok(proj) => self.project = Some(proj),
+            Ok(proj) => {
+                self.gui.focused_package = proj.root;
+                self.project = Some(proj);
+            }
             Err(e) => {
                 self.gui
                     .modal
@@ -43,14 +38,6 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
-        self.gui.modal.show_dialog();
-        egui::CentralPanel::default().show(ctx, |ui| match &self.project {
-            Some(proj) => {
-                crate::ui::project_ui(proj, ui);
-            }
-            None => {
-                ui.label("No project opened");
-            }
-        });
+        crate::ui::do_ui(self, ctx);
     }
 }
