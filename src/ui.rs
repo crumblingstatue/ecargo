@@ -79,6 +79,13 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
     });
     if let Some(key) = gui.selected_dep {
         egui::SidePanel::right("right_panel").show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.button("X").clicked() {
+                        gui.selected_dep = None;
+                    }
+                });
+            });
             let pkg = &project.packages[key];
             pkg_info_ui(ui, pkg, &gui.style);
         });
