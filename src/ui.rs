@@ -4,7 +4,7 @@ use {
         project::{Pkg, PkgKey, Project},
     },
     cargo_metadata::{camino::Utf8PathBuf, DependencyKind},
-    eframe::egui,
+    eframe::egui::{self, Color32},
     egui_modal::Modal,
 };
 
@@ -54,6 +54,20 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
     }
 }
 
+struct DepkindBadge<'a>(&'a str);
+
+impl<'a> egui::Widget for DepkindBadge<'a> {
+    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        let label = egui::Label::new(self.0);
+        let (pos, galley, re) = label.layout_in_ui(ui);
+        let painter = ui.painter();
+        let rect = re.rect.expand(2.0);
+        painter.rect_filled(rect, 2.0, egui::Color32::from_rgb(91, 52, 197));
+        painter.galley(pos, galley, Color32::YELLOW);
+        re.with_new_rect(rect)
+    }
+}
+
 fn package_ui(
     project: &Project,
     pkg: &Pkg,
@@ -73,6 +87,20 @@ fn package_ui(
                 .iter()
                 .filter(|dep| dep.kind == DependencyKind::Normal)
             {
+                match &dep.kind {
+                    DependencyKind::Normal => {
+                        ui.add(DepkindBadge("normal"));
+                    }
+                    DependencyKind::Development => {
+                        ui.label("dev");
+                    }
+                    DependencyKind::Build => {
+                        ui.label("build");
+                    }
+                    DependencyKind::Unknown => {
+                        ui.label("unknown");
+                    }
+                }
                 if let Some(pkg) = project
                     .packages
                     .values()
