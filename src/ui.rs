@@ -182,6 +182,10 @@ fn package_ui(
                         if re.clicked() {
                             gui.selected_dep = Some(pkg.key);
                         }
+                        if re.double_clicked() {
+                            gui.focused_package = Some(pkg.key);
+                            gui.selected_dep = None;
+                        }
                         ui.add(VersionBadge(&pkg.cm_pkg.version));
                         additional_dep_info_ui(dep, ui);
                     });
