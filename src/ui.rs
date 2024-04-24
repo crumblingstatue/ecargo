@@ -1,7 +1,7 @@
 use {
     crate::{
         app::App,
-        project::{Pkg, PkgKey, Project},
+        project::{dep_matches_pkg, Pkg, PkgKey, PkgSlotMap, Project},
         style::{Colors, Style},
     },
     cargo_metadata::{camino::Utf8PathBuf, semver::Version, DependencyKind},
@@ -11,7 +11,7 @@ use {
 
 pub struct Gui {
     pub modal: Modal,
-    pub selected_dep: Option<PkgKey>,
+    pub sidebar_pkg: Option<PkgKey>,
     pub focused_package: Option<PkgKey>,
     pub settings_window: SettingsWindow,
     pub style: Style,
@@ -47,7 +47,7 @@ impl Gui {
         crate::style::apply_style(egui_ctx, style.clone());
         Self {
             modal: Modal::new(egui_ctx, "modal_dialog"),
-            selected_dep: None,
+            sidebar_pkg: None,
             focused_package: None,
             settings_window: SettingsWindow::default(),
             style,
@@ -77,17 +77,24 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
             ui.heading(project.metadata.workspace_root.to_string());
         }
     });
-    if let Some(key) = gui.selected_dep {
+    if let Some(key) = gui.sidebar_pkg {
         egui::SidePanel::right("right_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("X").clicked() {
-                        gui.selected_dep = None;
+                        gui.sidebar_pkg = None;
                     }
                 });
             });
             let pkg = &project.packages[key];
-            pkg_info_ui(ui, pkg, &gui.style);
+            pkg_info_ui(
+                ui,
+                pkg,
+                &project.packages,
+                &gui.style,
+                &mut gui.focused_package,
+                &mut gui.sidebar_pkg,
+            );
         });
     }
     gui.settings_window.ui(ctx, &mut gui.style);
@@ -157,7 +164,14 @@ fn package_ui(
         }
     });
     ui.label(src_path.to_string());
-    pkg_info_ui(ui, pkg, &gui.style);
+    pkg_info_ui(
+        ui,
+        pkg,
+        &project.packages,
+        &gui.style,
+        &mut gui.focused_package,
+        &mut gui.sidebar_pkg,
+    );
     ui.add_space(16.0);
     ui.label("Dependencies");
     egui::ScrollArea::vertical().show(ui, |ui| {
@@ -167,11 +181,11 @@ fn package_ui(
                 if let Some(pkg) = project
                     .packages
                     .values()
-                    .find(|pkg| pkg.cm_pkg.name == dep.name && dep.req.matches(&pkg.cm_pkg.version))
+                    .find(|pkg| dep_matches_pkg(dep, pkg))
                 {
                     ui.scope(|ui| {
                         let re = ui.selectable_label(
-                            gui.selected_dep == Some(pkg.key),
+                            gui.sidebar_pkg == Some(pkg.key),
                             egui::RichText::new(&pkg.cm_pkg.name)
                                 .color(gui.style.colors.highlighted_text)
                                 .strong(),
@@ -183,11 +197,11 @@ fn package_ui(
                             }
                         });
                         if re.clicked() {
-                            gui.selected_dep = Some(pkg.key);
+                            gui.sidebar_pkg = Some(pkg.key);
                         }
                         if re.double_clicked() {
                             gui.focused_package = Some(pkg.key);
-                            gui.selected_dep = None;
+                            gui.sidebar_pkg = None;
                         }
                         ui.add(VersionBadge(&pkg.cm_pkg.version));
                         additional_dep_info_ui(dep, ui);
@@ -224,7 +238,14 @@ fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
     }
 }
 
-fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
+fn pkg_info_ui(
+    ui: &mut egui::Ui,
+    pkg: &Pkg,
+    packages: &PkgSlotMap,
+    style: &crate::style::Style,
+    focused_pkg: &mut Option<PkgKey>,
+    sidebar_pkg: &mut Option<PkgKey>,
+) {
     ui.label(
         egui::RichText::new(&pkg.cm_pkg.name)
             .heading()
@@ -296,6 +317,28 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
             }
         });
     });
+    if !pkg.dependents.is_empty() {
+        cheader("Dependents", style).show(ui, |ui| {
+            for link in &pkg.dependents {
+                ui.horizontal(|ui| {
+                    let dpkg = &packages[link.pkg_key];
+                    let re = ui.button(&dpkg.cm_pkg.name);
+                    if re.clicked() {
+                        *sidebar_pkg = Some(link.pkg_key);
+                    }
+                    if re.double_clicked() {
+                        *focused_pkg = Some(link.pkg_key);
+                        *sidebar_pkg = None;
+                    }
+                    ui.add(VersionBadge(&dpkg.cm_pkg.version));
+                    ui.add(DepkindBadge(link.kind));
+                    if let Some(platform) = &link.target {
+                        ui.label(platform.to_string());
+                    }
+                });
+            }
+        });
+    }
 }
 
 fn cheader(label: &str, style: &crate::style::Style) -> egui::CollapsingHeader {

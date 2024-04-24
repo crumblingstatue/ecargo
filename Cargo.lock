@@ -915,6 +915,7 @@ name = "ecargo"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "cargo-platform",
  "cargo_metadata",
  "eframe",
  "egui-modal",
