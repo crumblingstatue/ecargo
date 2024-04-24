@@ -169,6 +169,7 @@ fn package_ui(
                         re.context_menu(|ui| {
                             if ui.button("Set as focused package").clicked() {
                                 gui.focused_package = Some(pkg.key);
+                                ui.close_menu();
                             }
                         });
                         if re.clicked() {
