@@ -64,27 +64,30 @@ impl egui::Widget for DepkindBadge {
             DependencyKind::Build => ("build", egui::Color32::from_rgb(78, 40, 25)),
             DependencyKind::Unknown => ("unknown", egui::Color32::from_rgb(115, 115, 115)),
         };
-        let label = egui::Label::new(text);
-        let (pos, galley, re) = label.layout_in_ui(ui);
-        let painter = ui.painter();
-        let rect = re.rect.expand(2.0);
-        painter.rect_filled(rect, 2.0, bg_color);
-        painter.galley(pos, galley, Color32::YELLOW);
-        re.with_new_rect(rect)
+        badge(ui, text, bg_color, Color32::YELLOW)
     }
+}
+
+fn badge(ui: &mut egui::Ui, text: &str, bg_color: Color32, text_color: Color32) -> egui::Response {
+    let label = egui::Label::new(text);
+    let (pos, galley, re) = label.layout_in_ui(ui);
+    let painter = ui.painter();
+    let rect = re.rect.expand(2.0);
+    painter.rect_filled(rect, 2.0, bg_color);
+    painter.galley(pos, galley, text_color);
+    re.with_new_rect(rect)
 }
 
 struct VersionBadge<'a>(&'a Version);
 
 impl<'a> egui::Widget for VersionBadge<'a> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let label = egui::Label::new(self.0.to_string());
-        let (pos, galley, re) = label.layout_in_ui(ui);
-        let painter = ui.painter();
-        let rect = re.rect.expand(2.0);
-        painter.rect_filled(rect, 2.0, egui::Color32::from_rgb(69, 11, 86));
-        painter.galley(pos, galley, Color32::WHITE);
-        re.with_new_rect(rect)
+        badge(
+            ui,
+            &self.0.to_string(),
+            Color32::from_rgb(69, 11, 86),
+            Color32::WHITE,
+        )
     }
 }
 
@@ -137,6 +140,14 @@ fn package_ui(
                         ui.add(VersionBadge(&pkg.cm_pkg.version));
                         if let Some(target) = &dep.target {
                             ui.label(target.to_string());
+                        }
+                        if dep.optional {
+                            badge(
+                                ui,
+                                "optional",
+                                egui::Color32::DARK_GREEN,
+                                egui::Color32::LIGHT_GREEN,
+                            );
                         }
                     });
                     if let Some(info) = &pkg.cm_pkg.description {
