@@ -78,24 +78,26 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
         }
     });
     if let Some(key) = gui.sidebar_pkg {
-        egui::SidePanel::right("right_panel").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("X").clicked() {
-                        gui.sidebar_pkg = None;
-                    }
+        egui::SidePanel::right("right_panel")
+            .max_width(400.0)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui.button("X").clicked() {
+                            gui.sidebar_pkg = None;
+                        }
+                    });
                 });
+                let pkg = &project.packages[key];
+                pkg_info_ui(
+                    ui,
+                    pkg,
+                    &project.packages,
+                    &gui.style,
+                    &mut gui.focused_package,
+                    &mut gui.sidebar_pkg,
+                );
             });
-            let pkg = &project.packages[key];
-            pkg_info_ui(
-                ui,
-                pkg,
-                &project.packages,
-                &gui.style,
-                &mut gui.focused_package,
-                &mut gui.sidebar_pkg,
-            );
-        });
     }
     gui.settings_window.ui(ctx, &mut gui.style);
 }
