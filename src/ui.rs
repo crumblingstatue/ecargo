@@ -111,7 +111,7 @@ fn package_ui(
     ui.add_space(16.0);
     ui.label("Dependencies");
     egui::ScrollArea::vertical().show(ui, |ui| {
-        egui::Grid::new("deps_grid").show(ui, |ui| {
+        egui::Grid::new("deps_grid").striped(true).show(ui, |ui| {
             for dep in pkg.cm_pkg.dependencies.iter() {
                 ui.add(DepkindBadge(dep.kind));
                 if let Some(pkg) = project
