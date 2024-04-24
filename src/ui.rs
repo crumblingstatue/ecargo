@@ -317,6 +317,19 @@ fn pkg_info_ui(
                 .color(style.colors.highlighted_text),
         );
     });
+    if !pkg.cm_pkg.keywords.is_empty() {
+        ui.horizontal(|ui| {
+            ui.label("Keywords");
+            for kw in &pkg.cm_pkg.keywords {
+                badge(
+                    ui,
+                    kw,
+                    style.colors.active_weak_bg_fill,
+                    style.colors.highlighted_text,
+                );
+            }
+        });
+    }
     if pkg.cm_pkg.authors.len() == 1 {
         ui.label(format!("Author: {}", pkg.cm_pkg.authors.first().unwrap()));
     } else if !pkg.cm_pkg.authors.is_empty() {
@@ -452,6 +465,11 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
                     .description
                     .as_ref()
                     .is_some_and(|desc| desc.to_ascii_lowercase().contains(&gui.pkg_list_filter))
+                || pkg
+                    .cm_pkg
+                    .keywords
+                    .iter()
+                    .any(|kw| kw.contains(&gui.pkg_list_filter))
         });
         ui.label(format!(
             "{}/{} packages",
