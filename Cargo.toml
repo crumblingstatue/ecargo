@@ -11,3 +11,7 @@ eframe = "0.27.2"
 egui-modal = "0.3.6"
 slotmap = "1.0.7"
 cargo-platform = "0.1.5"
+
+[profile.release]
+panic = "abort"
+strip = true
