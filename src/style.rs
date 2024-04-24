@@ -32,12 +32,17 @@ pub struct Colors {
     pub inactive_weak_bg_fill: Color32,
     pub inactive_fg_stroke: Color32,
     pub open_weak_bg_fill: Color32,
+    pub hover_fg_stroke: Color32,
+    pub selection_stroke: Color32,
 }
 
 #[derive(Clone, Copy)]
 pub struct Icons {
     pub settings: &'static str,
 }
+
+#[allow(dead_code)]
+pub const DEBUG_COLOR: Color32 = Color32::from_rgb(255, 0, 255);
 
 pub fn crates_io() -> Style {
     let font_data = egui::FontData::from_static(include_bytes!("../assets/FiraSans-Regular.ttf"));
@@ -52,14 +57,16 @@ pub fn crates_io() -> Style {
             panel_fill: Color32::from_rgb(249, 247, 236),
             hyperlink_color: Color32::from_rgb(3, 123, 66),
             selected_bg_fill: Color32::from_rgb(206, 247, 197),
-            hover_weak_bg_fill: Color32::from_rgb(244, 253, 242),
+            hover_weak_bg_fill: Color32::from_rgb(206, 247, 197),
             active_weak_bg_fill: Color32::from_rgb(47, 155, 23),
             noninteractive_fg: Color32::from_rgb(101, 114, 120),
             highlghted_text: Color32::BLACK,
-            window_fill: Color32::from_rgb(249, 247, 236),
+            window_fill: Color32::from_rgb(206, 197, 139),
             inactive_weak_bg_fill: Color32::from_rgb(237, 158, 9),
             inactive_fg_stroke: Color32::WHITE,
             open_weak_bg_fill: Color32::from_rgb(38, 67, 35),
+            hover_fg_stroke: Color32::from_rgb(32, 162, 67),
+            selection_stroke: Color32::from_rgb(213, 167, 42),
         },
         icons: Icons { settings: "⚙" },
     }
@@ -82,6 +89,8 @@ pub fn vanilla_egui() -> Style {
             inactive_weak_bg_fill: style.visuals.widgets.inactive.weak_bg_fill,
             inactive_fg_stroke: style.visuals.widgets.inactive.fg_stroke.color,
             open_weak_bg_fill: style.visuals.widgets.open.weak_bg_fill,
+            hover_fg_stroke: style.visuals.widgets.hovered.fg_stroke.color,
+            selection_stroke: style.visuals.selection.stroke.color,
         },
         icons: Icons { settings: "⚙" },
     }
@@ -122,5 +131,7 @@ pub fn apply_style(egui_ctx: &egui::Context, style: Style) {
         egui_style.visuals.widgets.inactive.weak_bg_fill = style.colors.inactive_weak_bg_fill;
         egui_style.visuals.widgets.inactive.fg_stroke.color = style.colors.inactive_fg_stroke;
         egui_style.visuals.widgets.open.weak_bg_fill = style.colors.open_weak_bg_fill;
+        egui_style.visuals.widgets.hovered.fg_stroke.color = style.colors.hover_fg_stroke;
+        egui_style.visuals.selection.stroke.color = style.colors.selection_stroke;
     });
 }
