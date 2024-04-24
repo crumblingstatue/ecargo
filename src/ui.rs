@@ -269,6 +269,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, p
                         .clicked()
                     {
                         gui.focused_package = Some(pkg.key);
+                        gui.tab = Tab::ViewSingle;
                     }
                 }
                 None => {
