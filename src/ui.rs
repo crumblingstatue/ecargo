@@ -3,7 +3,7 @@ use {
         app::App,
         project::{Pkg, PkgKey, Project},
     },
-    cargo_metadata::{camino::Utf8PathBuf, DependencyKind},
+    cargo_metadata::{camino::Utf8PathBuf, semver::Version, DependencyKind},
     eframe::egui::{self, Color32},
     egui_modal::Modal,
 };
@@ -74,6 +74,20 @@ impl egui::Widget for DepkindBadge {
     }
 }
 
+struct VersionBadge<'a>(&'a Version);
+
+impl<'a> egui::Widget for VersionBadge<'a> {
+    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        let label = egui::Label::new(self.0.to_string());
+        let (pos, galley, re) = label.layout_in_ui(ui);
+        let painter = ui.painter();
+        let rect = re.rect.expand(2.0);
+        painter.rect_filled(rect, 2.0, egui::Color32::from_rgb(69, 11, 86));
+        painter.galley(pos, galley, Color32::WHITE);
+        re.with_new_rect(rect)
+    }
+}
+
 fn package_ui(
     project: &Project,
     pkg: &Pkg,
@@ -108,12 +122,9 @@ fn package_ui(
                     ui.scope(|ui| {
                         let re = ui.selectable_label(
                             gui.selected_dep == Some(pkg.key),
-                            egui::RichText::new(format!(
-                                "{} v{}",
-                                pkg.cm_pkg.name, pkg.cm_pkg.version
-                            ))
-                            .color(egui::Color32::WHITE)
-                            .strong(),
+                            egui::RichText::new(&pkg.cm_pkg.name)
+                                .color(egui::Color32::WHITE)
+                                .strong(),
                         );
                         re.context_menu(|ui| {
                             if ui.button("Set as focused package").clicked() {
@@ -123,6 +134,7 @@ fn package_ui(
                         if re.clicked() {
                             gui.selected_dep = Some(pkg.key);
                         }
+                        ui.add(VersionBadge(&pkg.cm_pkg.version));
                         if let Some(target) = &dep.target {
                             ui.label(target.to_string());
                         }
