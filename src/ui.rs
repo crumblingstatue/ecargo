@@ -210,4 +210,11 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg) {
             pkg.cm_pkg.name, pkg.cm_pkg.version
         ));
     });
+    ui.horizontal(|ui| {
+        ui.label("License");
+        match &pkg.cm_pkg.license {
+            Some(license) => ui.label(license),
+            None => ui.label("Unknown"),
+        };
+    });
 }
