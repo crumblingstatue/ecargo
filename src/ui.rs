@@ -163,7 +163,7 @@ fn package_ui(
                         let re = ui.selectable_label(
                             gui.selected_dep == Some(pkg.key),
                             egui::RichText::new(&pkg.cm_pkg.name)
-                                .color(gui.style.colors.highlghted_text)
+                                .color(gui.style.colors.highlighted_text)
                                 .strong(),
                         );
                         re.context_menu(|ui| {
@@ -214,7 +214,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
     ui.label(
         egui::RichText::new(&pkg.cm_pkg.name)
             .heading()
-            .color(style.colors.highlghted_text),
+            .color(style.colors.highlighted_text),
     );
     if let Some(desc) = &pkg.cm_pkg.description {
         ui.label(desc);
@@ -222,7 +222,8 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
     ui.horizontal(|ui| {
         ui.label("version");
         ui.label(
-            egui::RichText::new(pkg.cm_pkg.version.to_string()).color(style.colors.highlghted_text),
+            egui::RichText::new(pkg.cm_pkg.version.to_string())
+                .color(style.colors.highlighted_text),
         );
     });
     if let Some(info) = &pkg.cm_pkg.homepage {

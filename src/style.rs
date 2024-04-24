@@ -2,8 +2,11 @@ use eframe::egui::{self, Color32, FontData, FontDefinitions};
 
 type StyleFn = fn() -> Style;
 
-pub const STYLE_LIST: &[(&str, StyleFn); 2] =
-    &[("crates.io", crates_io), ("vanilla egui", vanilla_egui)];
+pub const STYLE_LIST: &[(&str, StyleFn); 3] = &[
+    ("crates.io", crates_io),
+    ("egui dark", egui_dark),
+    ("egui light", egui_light),
+];
 
 #[derive(Clone)]
 pub struct Font {
@@ -27,7 +30,7 @@ pub struct Colors {
     pub hover_weak_bg_fill: Color32,
     pub active_weak_bg_fill: Color32,
     pub noninteractive_fg: Color32,
-    pub highlghted_text: Color32,
+    pub highlighted_text: Color32,
     pub window_fill: Color32,
     pub inactive_weak_bg_fill: Color32,
     pub inactive_fg_stroke: Color32,
@@ -60,7 +63,7 @@ pub fn crates_io() -> Style {
             hover_weak_bg_fill: Color32::from_rgb(206, 247, 197),
             active_weak_bg_fill: Color32::from_rgb(47, 155, 23),
             noninteractive_fg: Color32::from_rgb(101, 114, 120),
-            highlghted_text: Color32::BLACK,
+            highlighted_text: Color32::BLACK,
             window_fill: Color32::from_rgb(206, 197, 139),
             inactive_weak_bg_fill: Color32::from_rgb(237, 158, 9),
             inactive_fg_stroke: Color32::WHITE,
@@ -72,25 +75,36 @@ pub fn crates_io() -> Style {
     }
 }
 
-pub fn vanilla_egui() -> Style {
-    let style = egui::Style::default();
+pub fn egui_dark() -> Style {
+    vanilla_egui(egui::Visuals::dark(), STYLE_LIST[1].0, Color32::WHITE)
+}
+
+pub fn egui_light() -> Style {
+    vanilla_egui(egui::Visuals::light(), STYLE_LIST[2].0, Color32::BROWN)
+}
+
+pub fn vanilla_egui(
+    visuals: egui::Visuals,
+    name: &'static str,
+    highlighted_text: Color32,
+) -> Style {
     Style {
-        name: STYLE_LIST[1].0,
+        name,
         font: None,
         colors: Colors {
-            panel_fill: style.visuals.panel_fill,
-            hyperlink_color: style.visuals.hyperlink_color,
-            selected_bg_fill: style.visuals.selection.bg_fill,
-            hover_weak_bg_fill: style.visuals.widgets.hovered.weak_bg_fill,
-            active_weak_bg_fill: style.visuals.widgets.active.weak_bg_fill,
-            noninteractive_fg: style.visuals.widgets.noninteractive.fg_stroke.color,
-            highlghted_text: Color32::WHITE,
-            window_fill: style.visuals.window_fill,
-            inactive_weak_bg_fill: style.visuals.widgets.inactive.weak_bg_fill,
-            inactive_fg_stroke: style.visuals.widgets.inactive.fg_stroke.color,
-            open_weak_bg_fill: style.visuals.widgets.open.weak_bg_fill,
-            hover_fg_stroke: style.visuals.widgets.hovered.fg_stroke.color,
-            selection_stroke: style.visuals.selection.stroke.color,
+            panel_fill: visuals.panel_fill,
+            hyperlink_color: visuals.hyperlink_color,
+            selected_bg_fill: visuals.selection.bg_fill,
+            hover_weak_bg_fill: visuals.widgets.hovered.weak_bg_fill,
+            active_weak_bg_fill: visuals.widgets.active.weak_bg_fill,
+            noninteractive_fg: visuals.widgets.noninteractive.fg_stroke.color,
+            highlighted_text,
+            window_fill: visuals.window_fill,
+            inactive_weak_bg_fill: visuals.widgets.inactive.weak_bg_fill,
+            inactive_fg_stroke: visuals.widgets.inactive.fg_stroke.color,
+            open_weak_bg_fill: visuals.widgets.open.weak_bg_fill,
+            hover_fg_stroke: visuals.widgets.hovered.fg_stroke.color,
+            selection_stroke: visuals.selection.stroke.color,
         },
         icons: Icons { settings: "⚙" },
     }
