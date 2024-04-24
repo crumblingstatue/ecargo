@@ -438,16 +438,26 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
         project,
     );
     egui::ScrollArea::vertical().show(ui, |ui| {
-        for (key, pkg) in &project.packages {
-            if ui
-                .selectable_label(
-                    gui.sidebar_pkg == Some(key),
-                    egui::RichText::new(&pkg.cm_pkg.name).color(gui.style.colors.highlighted_text),
-                )
-                .clicked()
-            {
-                gui.sidebar_pkg = Some(key);
+        egui::Grid::new("pkg_list_grid").show(ui, |ui| {
+            for (key, pkg) in &project.packages {
+                ui.scope(|ui| {
+                    if ui
+                        .selectable_label(
+                            gui.sidebar_pkg == Some(key),
+                            egui::RichText::new(&pkg.cm_pkg.name)
+                                .color(gui.style.colors.highlighted_text),
+                        )
+                        .clicked()
+                    {
+                        gui.sidebar_pkg = Some(key);
+                    }
+                    ui.add(VersionBadge(&pkg.cm_pkg.version));
+                });
+                if let Some(info) = &pkg.cm_pkg.description {
+                    ui.label(info);
+                }
+                ui.end_row();
             }
-        }
+        });
     });
 }
