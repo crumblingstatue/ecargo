@@ -254,6 +254,7 @@ fn pkg_info_ui(
     if let Some(desc) = &pkg.cm_pkg.description {
         ui.label(desc);
     }
+    ui.separator();
     ui.horizontal(|ui| {
         ui.label("version");
         ui.label(
