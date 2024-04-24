@@ -112,15 +112,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
                     });
                 });
                 let pkg = &project.packages[key];
-                pkg_info_ui(
-                    ui,
-                    pkg,
-                    &project.packages,
-                    &gui.style,
-                    &mut gui.focused_package,
-                    &mut gui.sidebar_pkg,
-                    &mut gui.tab,
-                );
+                pkg_info_ui(ui, pkg, &project.packages, gui);
             });
         gui.right_panel_left = re.response.rect.left();
     } else {
@@ -175,15 +167,7 @@ fn package_ui(
 ) {
     central_top_bar(ui, gui, Some(pkg), project);
     ui.label(src_path.to_string());
-    pkg_info_ui(
-        ui,
-        pkg,
-        &project.packages,
-        &gui.style,
-        &mut gui.focused_package,
-        &mut gui.sidebar_pkg,
-        &mut gui.tab,
-    );
+    pkg_info_ui(ui, pkg, &project.packages, gui);
     ui.add_space(16.0);
     ui.label("Dependencies");
     egui::ScrollArea::vertical().show(ui, |ui| {
@@ -295,27 +279,19 @@ fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
     }
 }
 
-fn pkg_info_ui(
-    ui: &mut egui::Ui,
-    pkg: &Pkg,
-    packages: &PkgSlotMap,
-    style: &crate::style::Style,
-    focused_pkg: &mut Option<PkgKey>,
-    sidebar_pkg: &mut Option<PkgKey>,
-    tab: &mut Tab,
-) {
+fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gui) {
     ui.horizontal(|ui| {
         ui.label(
             egui::RichText::new(&pkg.cm_pkg.name)
                 .heading()
-                .color(style.colors.highlighted_text),
+                .color(gui.style.colors.highlighted_text),
         );
-        if *focused_pkg != Some(pkg.key)
+        if gui.focused_package != Some(pkg.key)
             && ui.button("🗁").on_hover_text("Open in main view").clicked()
         {
-            *focused_pkg = Some(pkg.key);
-            *sidebar_pkg = None;
-            *tab = Tab::ViewSingle;
+            gui.focused_package = Some(pkg.key);
+            gui.sidebar_pkg = None;
+            gui.tab = Tab::ViewSingle;
         }
     });
     if let Some(desc) = &pkg.cm_pkg.description {
@@ -326,7 +302,7 @@ fn pkg_info_ui(
         ui.label("version");
         ui.label(
             egui::RichText::new(pkg.cm_pkg.version.to_string())
-                .color(style.colors.highlighted_text),
+                .color(gui.style.colors.highlighted_text),
         );
     });
     if !pkg.cm_pkg.keywords.is_empty() {
@@ -336,8 +312,8 @@ fn pkg_info_ui(
                 badge(
                     ui,
                     kw,
-                    style.colors.active_weak_bg_fill,
-                    style.colors.highlighted_text,
+                    gui.style.colors.active_weak_bg_fill,
+                    gui.style.colors.highlighted_text,
                 );
             }
         });
@@ -345,7 +321,7 @@ fn pkg_info_ui(
     if pkg.cm_pkg.authors.len() == 1 {
         ui.label(format!("Author: {}", pkg.cm_pkg.authors.first().unwrap()));
     } else if !pkg.cm_pkg.authors.is_empty() {
-        cheader("Authors", style).show(ui, |ui| {
+        cheader("Authors", &gui.style).show(ui, |ui| {
             for author in &pkg.cm_pkg.authors {
                 ui.label(author);
             }
@@ -396,7 +372,7 @@ fn pkg_info_ui(
     });
     ui.add_space(2.0);
 
-    cheader("Features", style).show(ui, |ui| {
+    cheader("Features", &gui.style).show(ui, |ui| {
         egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
             for (name, reqs) in &pkg.cm_pkg.features {
                 ui.label(name);
@@ -410,17 +386,17 @@ fn pkg_info_ui(
         });
     });
     if !pkg.dependents.is_empty() {
-        cheader("Dependents", style).show(ui, |ui| {
+        cheader("Dependents", &gui.style).show(ui, |ui| {
             for link in &pkg.dependents {
                 ui.horizontal(|ui| {
                     let dpkg = &packages[link.pkg_key];
                     let re = ui.button(&dpkg.cm_pkg.name);
                     if re.clicked() {
-                        *sidebar_pkg = Some(link.pkg_key);
+                        gui.sidebar_pkg = Some(link.pkg_key);
                     }
                     if re.double_clicked() {
-                        *focused_pkg = Some(link.pkg_key);
-                        *sidebar_pkg = None;
+                        gui.focused_package = Some(link.pkg_key);
+                        gui.sidebar_pkg = None;
                     }
                     ui.add(VersionBadge(&dpkg.cm_pkg.version));
                     ui.add(DepkindBadge(link.kind));
