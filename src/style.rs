@@ -37,6 +37,8 @@ pub struct Colors {
     pub open_weak_bg_fill: Color32,
     pub hover_fg_stroke: Color32,
     pub selection_stroke: Color32,
+    pub extreme_bg: Color32,
+    pub text_edit_text: Color32,
 }
 
 #[derive(Clone, Copy)]
@@ -70,6 +72,8 @@ pub fn crates_io() -> Style {
             open_weak_bg_fill: Color32::from_rgb(38, 67, 35),
             hover_fg_stroke: Color32::from_rgb(32, 162, 67),
             selection_stroke: Color32::from_rgb(213, 167, 42),
+            extreme_bg: Color32::WHITE,
+            text_edit_text: Color32::BLACK,
         },
         icons: Icons { settings: "⚙" },
     }
@@ -105,6 +109,8 @@ pub fn vanilla_egui(
             open_weak_bg_fill: visuals.widgets.open.weak_bg_fill,
             hover_fg_stroke: visuals.widgets.hovered.fg_stroke.color,
             selection_stroke: visuals.selection.stroke.color,
+            extreme_bg: visuals.extreme_bg_color,
+            text_edit_text: visuals.widgets.inactive.text_color(),
         },
         icons: Icons { settings: "⚙" },
     }
@@ -147,5 +153,6 @@ pub fn apply_style(egui_ctx: &egui::Context, style: Style) {
         egui_style.visuals.widgets.open.weak_bg_fill = style.colors.open_weak_bg_fill;
         egui_style.visuals.widgets.hovered.fg_stroke.color = style.colors.hover_fg_stroke;
         egui_style.visuals.selection.stroke.color = style.colors.selection_stroke;
+        egui_style.visuals.extreme_bg_color = style.colors.extreme_bg;
     });
 }

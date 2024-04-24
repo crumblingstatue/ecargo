@@ -17,6 +17,7 @@ pub struct Gui {
     pub style: Style,
     pub tab: Tab,
     pub right_panel_left: f32,
+    pub pkg_list_filter: String,
 }
 
 #[derive(Default, PartialEq)]
@@ -67,6 +68,7 @@ impl Gui {
                     .map(|r| r.right())
                     .unwrap_or(1000.0)
             }),
+            pkg_list_filter: String::new(),
         }
     }
 }
@@ -438,9 +440,33 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
         gui.focused_package.map(|key| &project.packages[key]),
         project,
     );
+    let mut filtered: Vec<_> = project.packages.keys().collect();
+    ui.horizontal(|ui| {
+        ui.add(
+            egui::TextEdit::singleline(&mut gui.pkg_list_filter)
+                .text_color(gui.style.colors.text_edit_text)
+                .hint_text("Filter"),
+        );
+        filtered.retain(|key| {
+            let pkg = &project.packages[*key];
+            pkg.cm_pkg.name.contains(&gui.pkg_list_filter)
+                || pkg
+                    .cm_pkg
+                    .description
+                    .as_ref()
+                    .is_some_and(|desc| desc.to_ascii_lowercase().contains(&gui.pkg_list_filter))
+        });
+        ui.label(format!(
+            "{}/{} packages",
+            filtered.len(),
+            project.packages.len()
+        ));
+    });
+    ui.separator();
     egui::ScrollArea::vertical().show(ui, |ui| {
         egui::Grid::new("pkg_list_grid").show(ui, |ui| {
-            for (key, pkg) in &project.packages {
+            for key in filtered {
+                let pkg = &project.packages[key];
                 ui.scope(|ui| {
                     if ui
                         .selectable_label(
