@@ -1,5 +1,6 @@
 mod app;
 mod project;
+mod style;
 mod ui;
 
 use {app::App, eframe::NativeOptions};

@@ -1,6 +1,6 @@
 use {
     crate::{project::Project, ui::Gui},
-    eframe::egui,
+    eframe::egui::{self},
     std::path::Path,
 };
 
