@@ -3,7 +3,10 @@ mod project;
 mod style;
 mod ui;
 
-use {app::App, eframe::NativeOptions};
+use {
+    app::App,
+    eframe::{egui, NativeOptions},
+};
 
 fn main() {
     eframe::run_native(
@@ -11,6 +14,8 @@ fn main() {
         NativeOptions::default(),
         Box::new(|cc| {
             Box::new({
+                cc.egui_ctx
+                    .send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(1280., 720.)));
                 let mut app = App::new(&cc.egui_ctx);
                 if let Some(arg) = std::env::args_os().nth(1) {
                     app.load_project(arg.as_ref());
