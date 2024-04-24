@@ -15,6 +15,15 @@ pub struct Gui {
     pub focused_package: Option<PkgKey>,
     pub settings_window: SettingsWindow,
     pub style: Style,
+    pub tab: Tab,
+    pub right_panel_left: f32,
+}
+
+#[derive(Default, PartialEq)]
+pub enum Tab {
+    #[default]
+    ViewSingle,
+    PackageList,
 }
 
 #[derive(Default)]
@@ -51,6 +60,13 @@ impl Gui {
             focused_package: None,
             settings_window: SettingsWindow::default(),
             style,
+            tab: Tab::default(),
+            right_panel_left: egui_ctx.input(|inp| {
+                inp.viewport()
+                    .inner_rect
+                    .map(|r| r.right())
+                    .unwrap_or(1000.0)
+            }),
         }
     }
 }
@@ -69,16 +85,21 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
 
 pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
     egui::CentralPanel::default().show(ctx, |ui| match gui.focused_package {
-        Some(id) => {
-            let pkg = &project.packages[id];
-            package_ui(project, pkg, &pkg.cm_pkg.manifest_path, ui, gui);
-        }
+        Some(id) => match gui.tab {
+            Tab::ViewSingle => {
+                let pkg = &project.packages[id];
+                package_ui(project, pkg, &pkg.cm_pkg.manifest_path, ui, gui);
+            }
+            Tab::PackageList => {
+                package_list_ui(project, ui, gui);
+            }
+        },
         None => {
             ui.heading(project.metadata.workspace_root.to_string());
         }
     });
     if let Some(key) = gui.sidebar_pkg {
-        egui::SidePanel::right("right_panel")
+        let re = egui::SidePanel::right("right_panel")
             .max_width(400.0)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -98,6 +119,12 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
                     &mut gui.sidebar_pkg,
                 );
             });
+        gui.right_panel_left = re.response.rect.left();
+    } else {
+        // Try to set the right panel left to near screen width.
+        // If we set it to exactly screen width, the settings button can inexplicably disappear.
+        // Weird.
+        gui.right_panel_left = ctx.input(|inp| inp.viewport().inner_rect.unwrap().right() - 16.0);
     }
     gui.settings_window.ui(ctx, &mut gui.style);
 }
@@ -146,25 +173,7 @@ fn package_ui(
     ui: &mut egui::Ui,
     gui: &mut Gui,
 ) {
-    ui.horizontal(|ui| {
-        if ui.button(gui.style.icons.settings).clicked() {
-            gui.settings_window.open ^= true;
-        }
-        match project.root {
-            Some(root) => {
-                let pkg = &project.packages[root];
-                if ui
-                    .link(format!("go to root ({})", pkg.cm_pkg.name))
-                    .clicked()
-                {
-                    gui.focused_package = Some(pkg.key);
-                }
-            }
-            None => {
-                ui.add_enabled(false, egui::Link::new("root"));
-            }
-        }
-    });
+    central_top_bar(ui, gui, Some(pkg), project);
     ui.label(src_path.to_string());
     pkg_info_ui(
         ui,
@@ -220,6 +229,50 @@ fn package_ui(
                     ui.label(egui::RichText::new("Unresolved").italics())
                         .on_hover_text("Couldn't find a package for this dependency.");
                     ui.end_row();
+                }
+            }
+        });
+    });
+}
+
+fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, project: &Project) {
+    ui.horizontal(|ui| {
+        ui.set_width(gui.right_panel_left - 30.0);
+        for (tab, tabname) in [
+            (
+                Tab::ViewSingle,
+                active_pkg
+                    .map(|pkg| pkg.cm_pkg.name.as_str())
+                    .unwrap_or("Single view"),
+            ),
+            (Tab::PackageList, "Packages"),
+        ] {
+            if ui
+                .selectable_label(
+                    gui.tab == tab,
+                    egui::RichText::new(tabname).color(gui.style.colors.highlighted_text),
+                )
+                .clicked()
+            {
+                gui.tab = tab;
+            }
+        }
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+            if ui.button(gui.style.icons.settings).clicked() {
+                gui.settings_window.open ^= true;
+            }
+            match project.root {
+                Some(root) => {
+                    let pkg = &project.packages[root];
+                    if ui
+                        .link(format!("go to root ({})", pkg.cm_pkg.name))
+                        .clicked()
+                    {
+                        gui.focused_package = Some(pkg.key);
+                    }
+                }
+                None => {
+                    ui.add_enabled(false, egui::Link::new("root"));
                 }
             }
         });
@@ -375,4 +428,26 @@ fn header_icon(ui: &mut egui::Ui, openness: f32, response: &egui::Response, colo
         colors.highlighted_text,
         egui::Stroke::NONE,
     ));
+}
+
+fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
+    central_top_bar(
+        ui,
+        gui,
+        gui.focused_package.map(|key| &project.packages[key]),
+        project,
+    );
+    egui::ScrollArea::vertical().show(ui, |ui| {
+        for (key, pkg) in &project.packages {
+            if ui
+                .selectable_label(
+                    gui.sidebar_pkg == Some(key),
+                    egui::RichText::new(&pkg.cm_pkg.name).color(gui.style.colors.highlighted_text),
+                )
+                .clicked()
+            {
+                gui.sidebar_pkg = Some(key);
+            }
+        }
+    });
 }
