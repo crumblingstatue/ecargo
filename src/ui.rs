@@ -105,20 +105,28 @@ fn package_ui(
                     .values()
                     .find(|pkg| pkg.cm_pkg.name == dep.name && dep.req.matches(&pkg.cm_pkg.version))
                 {
-                    let re = ui.selectable_label(
-                        gui.selected_dep == Some(pkg.key),
-                        egui::RichText::new(format!("{} v{}", pkg.cm_pkg.name, pkg.cm_pkg.version))
+                    ui.scope(|ui| {
+                        let re = ui.selectable_label(
+                            gui.selected_dep == Some(pkg.key),
+                            egui::RichText::new(format!(
+                                "{} v{}",
+                                pkg.cm_pkg.name, pkg.cm_pkg.version
+                            ))
                             .color(egui::Color32::WHITE)
                             .strong(),
-                    );
-                    re.context_menu(|ui| {
-                        if ui.button("Set as focused package").clicked() {
-                            gui.focused_package = Some(pkg.key);
+                        );
+                        re.context_menu(|ui| {
+                            if ui.button("Set as focused package").clicked() {
+                                gui.focused_package = Some(pkg.key);
+                            }
+                        });
+                        if re.clicked() {
+                            gui.selected_dep = Some(pkg.key);
+                        }
+                        if let Some(target) = &dep.target {
+                            ui.label(target.to_string());
                         }
                     });
-                    if re.clicked() {
-                        gui.selected_dep = Some(pkg.key);
-                    }
                     if let Some(info) = &pkg.cm_pkg.description {
                         ui.label(info);
                     }
