@@ -144,7 +144,10 @@ fn package_ui(
         match project.root {
             Some(root) => {
                 let pkg = &project.packages[root];
-                if ui.link("root").clicked() {
+                if ui
+                    .link(format!("go to root ({})", pkg.cm_pkg.name))
+                    .clicked()
+                {
                     gui.focused_package = Some(pkg.key);
                 }
             }
