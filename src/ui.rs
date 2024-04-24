@@ -2,7 +2,7 @@ use {
     crate::{
         app::App,
         project::{Pkg, PkgKey, Project},
-        style::Style,
+        style::{Colors, Style},
     },
     cargo_metadata::{camino::Utf8PathBuf, semver::Version, DependencyKind},
     eframe::egui::{self, Color32},
@@ -258,4 +258,50 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
             None => ui.label("Unknown"),
         };
     });
+    ui.add_space(2.0);
+    let colors = style.colors;
+    egui::CollapsingHeader::new(
+        egui::RichText::new("Features").color(style.colors.highlighted_text),
+    )
+    .icon(move |ui, openness, re| header_icon(ui, openness, re, colors))
+    .show(ui, |ui| {
+        egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
+            for (name, reqs) in &pkg.cm_pkg.features {
+                ui.label(name);
+                ui.scope(|ui| {
+                    for req in reqs {
+                        ui.label(req);
+                    }
+                });
+                ui.end_row();
+            }
+        });
+    });
+}
+
+// Stolen code from egui, because I need to specify the right color for the icon
+fn header_icon(ui: &mut egui::Ui, openness: f32, response: &egui::Response, colors: Colors) {
+    let visuals = ui.style().interact(response);
+
+    let rect = response.rect;
+
+    // Draw a pointy triangle arrow:
+    let rect = egui::Rect::from_center_size(
+        rect.center(),
+        egui::vec2(rect.width(), rect.height()) * 0.75,
+    );
+    let rect = rect.expand(visuals.expansion);
+    let mut points = vec![rect.left_top(), rect.right_top(), rect.center_bottom()];
+    use std::f32::consts::TAU;
+    let rotation =
+        egui::emath::Rot2::from_angle(egui::remap(openness, 0.0..=1.0, -TAU / 4.0..=0.0));
+    for p in &mut points {
+        *p = rect.center() + rotation * (*p - rect.center());
+    }
+
+    ui.painter().add(egui::Shape::convex_polygon(
+        points,
+        colors.highlighted_text,
+        egui::Stroke::NONE,
+    ));
 }
