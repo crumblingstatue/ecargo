@@ -54,15 +54,21 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
     }
 }
 
-struct DepkindBadge<'a>(&'a str);
+struct DepkindBadge(DependencyKind);
 
-impl<'a> egui::Widget for DepkindBadge<'a> {
+impl egui::Widget for DepkindBadge {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let label = egui::Label::new(self.0);
+        let (text, bg_color) = match self.0 {
+            DependencyKind::Normal => ("normal", egui::Color32::from_rgb(91, 52, 197)),
+            DependencyKind::Development => ("dev", egui::Color32::from_rgb(32, 60, 18)),
+            DependencyKind::Build => ("build", egui::Color32::from_rgb(78, 40, 25)),
+            DependencyKind::Unknown => ("unknown", egui::Color32::from_rgb(115, 115, 115)),
+        };
+        let label = egui::Label::new(text);
         let (pos, galley, re) = label.layout_in_ui(ui);
         let painter = ui.painter();
         let rect = re.rect.expand(2.0);
-        painter.rect_filled(rect, 2.0, egui::Color32::from_rgb(91, 52, 197));
+        painter.rect_filled(rect, 2.0, bg_color);
         painter.galley(pos, galley, Color32::YELLOW);
         re.with_new_rect(rect)
     }
@@ -81,26 +87,8 @@ fn package_ui(
     ui.label("Dependencies");
     egui::ScrollArea::vertical().show(ui, |ui| {
         egui::Grid::new("deps_grid").show(ui, |ui| {
-            for dep in pkg
-                .cm_pkg
-                .dependencies
-                .iter()
-                .filter(|dep| dep.kind == DependencyKind::Normal)
-            {
-                match &dep.kind {
-                    DependencyKind::Normal => {
-                        ui.add(DepkindBadge("normal"));
-                    }
-                    DependencyKind::Development => {
-                        ui.label("dev");
-                    }
-                    DependencyKind::Build => {
-                        ui.label("build");
-                    }
-                    DependencyKind::Unknown => {
-                        ui.label("unknown");
-                    }
-                }
+            for dep in pkg.cm_pkg.dependencies.iter() {
+                ui.add(DepkindBadge(dep.kind));
                 if let Some(pkg) = project
                     .packages
                     .values()
