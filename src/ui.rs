@@ -237,6 +237,15 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
                 .color(style.colors.highlighted_text),
         );
     });
+    if pkg.cm_pkg.authors.len() == 1 {
+        ui.label(format!("Author: {}", pkg.cm_pkg.authors.first().unwrap()));
+    } else if !pkg.cm_pkg.authors.is_empty() {
+        cheader("Authors", style).show(ui, |ui| {
+            for author in &pkg.cm_pkg.authors {
+                ui.label(author);
+            }
+        });
+    }
     if let Some(info) = &pkg.cm_pkg.homepage {
         ui.horizontal(|ui| {
             ui.label("Homepage");
@@ -270,12 +279,8 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
         };
     });
     ui.add_space(2.0);
-    let colors = style.colors;
-    egui::CollapsingHeader::new(
-        egui::RichText::new("Features").color(style.colors.highlighted_text),
-    )
-    .icon(move |ui, openness, re| header_icon(ui, openness, re, colors))
-    .show(ui, |ui| {
+
+    cheader("Features", style).show(ui, |ui| {
         egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
             for (name, reqs) in &pkg.cm_pkg.features {
                 ui.label(name);
@@ -288,6 +293,12 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, style: &crate::style::Style) {
             }
         });
     });
+}
+
+fn cheader(label: &str, style: &crate::style::Style) -> egui::CollapsingHeader {
+    let colors = style.colors;
+    egui::CollapsingHeader::new(egui::RichText::new(label).color(style.colors.highlighted_text))
+        .icon(move |ui, openness, re| header_icon(ui, openness, re, colors))
 }
 
 // Stolen code from egui, because I need to specify the right color for the icon
