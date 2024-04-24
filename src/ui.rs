@@ -340,6 +340,13 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             ui.label("crates.io");
             ui.hyperlink(format!("https://crates.io/crates/{}", &pkg.cm_pkg.name));
         });
+        ui.horizontal(|ui| {
+            ui.label("docs.rs");
+            ui.hyperlink(format!(
+                "https://docs.rs/{}/{}",
+                pkg.cm_pkg.name, pkg.cm_pkg.version
+            ));
+        });
     }
     if let Some(info) = &pkg.cm_pkg.homepage {
         ui.horizontal(|ui| {
@@ -359,13 +366,6 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             ui.hyperlink(info);
         });
     }
-    ui.horizontal(|ui| {
-        ui.label("docs.rs");
-        ui.hyperlink(format!(
-            "https://docs.rs/{}/{}",
-            pkg.cm_pkg.name, pkg.cm_pkg.version
-        ));
-    });
     ui.horizontal(|ui| {
         ui.label("License");
         match &pkg.cm_pkg.license {
