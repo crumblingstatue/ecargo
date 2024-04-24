@@ -339,6 +339,17 @@ fn pkg_info_ui(
             }
         });
     }
+    if pkg
+        .cm_pkg
+        .source
+        .as_ref()
+        .is_some_and(|src| src.is_crates_io())
+    {
+        ui.horizontal(|ui| {
+            ui.label("crates.io");
+            ui.hyperlink(format!("https://crates.io/crates/{}", &pkg.cm_pkg.name));
+        });
+    }
     if let Some(info) = &pkg.cm_pkg.homepage {
         ui.horizontal(|ui| {
             ui.label("Homepage");
