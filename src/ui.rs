@@ -81,6 +81,17 @@ fn package_ui(
     ui: &mut egui::Ui,
     gui: &mut Gui,
 ) {
+    match project.root {
+        Some(root) => {
+            let pkg = &project.packages[root];
+            if ui.link("root").clicked() {
+                gui.focused_package = Some(pkg.key);
+            }
+        }
+        None => {
+            ui.add_enabled(false, egui::Link::new("root"));
+        }
+    }
     ui.label(src_path.to_string());
     pkg_info_ui(ui, pkg);
     ui.add_space(16.0);
