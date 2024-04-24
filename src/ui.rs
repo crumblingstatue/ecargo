@@ -138,29 +138,38 @@ fn package_ui(
                             gui.selected_dep = Some(pkg.key);
                         }
                         ui.add(VersionBadge(&pkg.cm_pkg.version));
-                        if let Some(target) = &dep.target {
-                            ui.label(target.to_string());
-                        }
-                        if dep.optional {
-                            badge(
-                                ui,
-                                "optional",
-                                egui::Color32::DARK_GREEN,
-                                egui::Color32::LIGHT_GREEN,
-                            );
-                        }
+                        additional_dep_info_ui(dep, ui);
                     });
                     if let Some(info) = &pkg.cm_pkg.description {
                         ui.label(info);
                     }
                     ui.end_row();
                 } else {
-                    ui.label(format!("Unresolved dependency: {} {}", dep.name, dep.req));
+                    ui.scope(|ui| {
+                        ui.label(format!("{} {}", dep.name, dep.req));
+                        additional_dep_info_ui(dep, ui);
+                    });
+                    ui.label(egui::RichText::new("Unresolved").italics())
+                        .on_hover_text("Couldn't find a package for this dependency.");
                     ui.end_row();
                 }
             }
         });
     });
+}
+
+fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
+    if let Some(target) = &dep.target {
+        ui.label(target.to_string());
+    }
+    if dep.optional {
+        badge(
+            ui,
+            "optional",
+            egui::Color32::DARK_GREEN,
+            egui::Color32::LIGHT_GREEN,
+        );
+    }
 }
 
 fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg) {
