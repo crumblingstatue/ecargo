@@ -78,15 +78,18 @@ fn package_ui(
                     .values()
                     .find(|pkg| pkg.cm_pkg.name == dep.name && dep.req.matches(&pkg.cm_pkg.version))
                 {
-                    if ui
-                        .selectable_label(
-                            gui.selected_dep == Some(pkg.key),
-                            egui::RichText::new(format!("{} v{}", dep.name, dep.req))
-                                .color(egui::Color32::WHITE)
-                                .strong(),
-                        )
-                        .clicked()
-                    {
+                    let re = ui.selectable_label(
+                        gui.selected_dep == Some(pkg.key),
+                        egui::RichText::new(format!("{} v{}", dep.name, dep.req))
+                            .color(egui::Color32::WHITE)
+                            .strong(),
+                    );
+                    re.context_menu(|ui| {
+                        if ui.button("Set as focused package").clicked() {
+                            gui.focused_package = Some(pkg.key);
+                        }
+                    });
+                    if re.clicked() {
                         gui.selected_dep = Some(pkg.key);
                     }
                     if let Some(info) = &pkg.cm_pkg.description {
@@ -95,6 +98,7 @@ fn package_ui(
                     ui.end_row();
                 } else {
                     ui.label(format!("Unresolved dependency: {}", dep.name));
+                    ui.end_row();
                 }
             }
         });
