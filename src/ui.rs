@@ -108,7 +108,7 @@ fn package_ui(
                 {
                     let re = ui.selectable_label(
                         gui.selected_dep == Some(pkg.key),
-                        egui::RichText::new(format!("{} v{}", dep.name, dep.req))
+                        egui::RichText::new(format!("{} v{}", pkg.cm_pkg.name, pkg.cm_pkg.version))
                             .color(egui::Color32::WHITE)
                             .strong(),
                     );
@@ -125,7 +125,7 @@ fn package_ui(
                     }
                     ui.end_row();
                 } else {
-                    ui.label(format!("Unresolved dependency: {}", dep.name));
+                    ui.label(format!("Unresolved dependency: {} {}", dep.name, dep.req));
                     ui.end_row();
                 }
             }
