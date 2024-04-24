@@ -126,4 +126,17 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg) {
             ui.hyperlink(info);
         });
     }
+    if let Some(info) = &pkg.cm_pkg.documentation {
+        ui.horizontal(|ui| {
+            ui.label("Docs link");
+            ui.hyperlink(info);
+        });
+    }
+    ui.horizontal(|ui| {
+        ui.label("docs.rs");
+        ui.hyperlink(format!(
+            "https://docs.rs/{}/{}",
+            pkg.cm_pkg.name, pkg.cm_pkg.version
+        ));
+    });
 }
