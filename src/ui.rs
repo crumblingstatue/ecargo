@@ -119,6 +119,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
                     &gui.style,
                     &mut gui.focused_package,
                     &mut gui.sidebar_pkg,
+                    &mut gui.tab,
                 );
             });
         gui.right_panel_left = re.response.rect.left();
@@ -181,6 +182,7 @@ fn package_ui(
         &gui.style,
         &mut gui.focused_package,
         &mut gui.sidebar_pkg,
+        &mut gui.tab,
     );
     ui.add_space(16.0);
     ui.label("Dependencies");
@@ -300,12 +302,22 @@ fn pkg_info_ui(
     style: &crate::style::Style,
     focused_pkg: &mut Option<PkgKey>,
     sidebar_pkg: &mut Option<PkgKey>,
+    tab: &mut Tab,
 ) {
-    ui.label(
-        egui::RichText::new(&pkg.cm_pkg.name)
-            .heading()
-            .color(style.colors.highlighted_text),
-    );
+    ui.horizontal(|ui| {
+        ui.label(
+            egui::RichText::new(&pkg.cm_pkg.name)
+                .heading()
+                .color(style.colors.highlighted_text),
+        );
+        if *focused_pkg != Some(pkg.key)
+            && ui.button("🗁").on_hover_text("Open in main view").clicked()
+        {
+            *focused_pkg = Some(pkg.key);
+            *sidebar_pkg = None;
+            *tab = Tab::ViewSingle;
+        }
+    });
     if let Some(desc) = &pkg.cm_pkg.description {
         ui.label(desc);
     }
