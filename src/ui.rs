@@ -5,7 +5,7 @@ use {
         style::{Colors, Style},
     },
     cargo_metadata::{camino::Utf8PathBuf, semver::Version, DependencyKind},
-    eframe::egui::{self, Color32},
+    eframe::egui::{self, Align2, Color32},
     egui_modal::Modal,
 };
 
@@ -36,6 +36,9 @@ impl SettingsWindow {
     fn ui(&mut self, ctx: &egui::Context, style: &mut Style) {
         egui::Window::new("Settings")
             .open(&mut self.open)
+            .anchor(Align2::RIGHT_TOP, egui::vec2(0.0, 0.0))
+            .resizable(false)
+            .collapsible(false)
             .show(ctx, |ui| {
                 egui::ComboBox::new("style_combo", "Style")
                     .selected_text(style.name)
