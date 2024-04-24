@@ -65,7 +65,7 @@ impl Gui {
             right_panel_left: egui_ctx.input(|inp| {
                 inp.viewport()
                     .inner_rect
-                    .map(|r| r.right())
+                    .map(|r| r.width())
                     .unwrap_or(1000.0)
             }),
             pkg_list_filter: String::new(),
@@ -123,10 +123,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
             });
         gui.right_panel_left = re.response.rect.left();
     } else {
-        // Try to set the right panel left to near screen width.
-        // If we set it to exactly screen width, the settings button can inexplicably disappear.
-        // Weird.
-        gui.right_panel_left = ctx.input(|inp| inp.viewport().inner_rect.unwrap().right() - 16.0);
+        gui.right_panel_left = ctx.input(|inp| inp.viewport().inner_rect.unwrap().width());
     }
     gui.settings_window.ui(ctx, &mut gui.style);
 }
@@ -239,7 +236,7 @@ fn package_ui(
 
 fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, project: &Project) {
     ui.horizontal(|ui| {
-        ui.set_width(gui.right_panel_left - 30.0);
+        ui.set_width(gui.right_panel_left - 16.0);
         for (tab, tabname) in [
             (
                 Tab::ViewSingle,
