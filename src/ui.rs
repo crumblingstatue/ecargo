@@ -465,15 +465,18 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
             for key in filtered {
                 let pkg = &project.packages[key];
                 ui.scope(|ui| {
-                    if ui
-                        .selectable_label(
-                            gui.sidebar_pkg == Some(key),
-                            egui::RichText::new(&pkg.cm_pkg.name)
-                                .color(gui.style.colors.highlighted_text),
-                        )
-                        .clicked()
-                    {
+                    let re = ui.selectable_label(
+                        gui.sidebar_pkg == Some(key),
+                        egui::RichText::new(&pkg.cm_pkg.name)
+                            .color(gui.style.colors.highlighted_text),
+                    );
+                    if re.clicked() {
                         gui.sidebar_pkg = Some(key);
+                    }
+                    if re.double_clicked() {
+                        gui.focused_package = Some(key);
+                        gui.sidebar_pkg = None;
+                        gui.tab = Tab::ViewSingle;
                     }
                     ui.add(VersionBadge(&pkg.cm_pkg.version));
                 });
