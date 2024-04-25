@@ -381,25 +381,27 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     });
     ui.add_space(2.0);
 
-    cheader("Features", &gui.style).show(ui, |ui| {
-        egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
-            for (name, reqs) in &pkg.cm_pkg.features {
-                let enabled = pkg.enabled_features.contains(name);
-                if enabled {
-                    ui.label("☑").on_hover_text("enabled");
-                } else {
-                    ui.label("☐").on_hover_text("disabled");
-                }
-                ui.label(name);
-                ui.scope(|ui| {
-                    for req in reqs {
-                        ui.label(req);
+    if !pkg.cm_pkg.features.is_empty() {
+        cheader("Features", &gui.style).show(ui, |ui| {
+            egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
+                for (name, reqs) in &pkg.cm_pkg.features {
+                    let enabled = pkg.enabled_features.contains(name);
+                    if enabled {
+                        ui.label("☑").on_hover_text("enabled");
+                    } else {
+                        ui.label("☐").on_hover_text("disabled");
                     }
-                });
-                ui.end_row();
-            }
+                    ui.label(name);
+                    ui.scope(|ui| {
+                        for req in reqs {
+                            ui.label(req);
+                        }
+                    });
+                    ui.end_row();
+                }
+            });
         });
-    });
+    }
     if !pkg.dependents.is_empty() {
         cheader("Dependents", &gui.style).show(ui, |ui| {
             for link in &pkg.dependents {
