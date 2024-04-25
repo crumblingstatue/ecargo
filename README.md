@@ -32,3 +32,8 @@ Get a good idea for how a package fits into your dependency chain, including:
 What more do you need?
 
 Don't worry, you can also use the vanilla dark and light egui themes.
+
+## Installation
+`cargo install ecargo`
+
+There are no pre-built artifacts at the moment, but that may change.
