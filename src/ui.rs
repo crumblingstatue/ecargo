@@ -100,7 +100,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
     });
     if let Some(key) = gui.sidebar_pkg {
         let re = egui::SidePanel::right("right_panel")
-            .max_width(400.0)
+            .max_width(ctx.available_rect().width() / 2.5)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
