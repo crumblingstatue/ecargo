@@ -384,6 +384,12 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     cheader("Features", &gui.style).show(ui, |ui| {
         egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
             for (name, reqs) in &pkg.cm_pkg.features {
+                let enabled = pkg.enabled_features.contains(name);
+                if enabled {
+                    ui.label("☑").on_hover_text("enabled");
+                } else {
+                    ui.label("☐").on_hover_text("disabled");
+                }
                 ui.label(name);
                 ui.scope(|ui| {
                     for req in reqs {

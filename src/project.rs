@@ -2,7 +2,7 @@ use {
     cargo_metadata::{DependencyKind, Metadata, MetadataCommand, Package},
     cargo_platform::Platform,
     slotmap::{new_key_type, SlotMap},
-    std::path::Path,
+    std::{collections::HashMap, path::Path},
 };
 
 pub struct DepLink {
@@ -16,6 +16,7 @@ pub struct Pkg {
     pub key: PkgKey,
     pub dependents: Vec<DepLink>,
     pub dependencies: Vec<DepLink>,
+    pub enabled_features: Vec<String>,
 }
 
 pub type PkgSlotMap = SlotMap<PkgKey, Pkg>;
@@ -36,13 +37,26 @@ impl Project {
             .manifest_path(path.join("Cargo.toml"))
             .exec()?;
         let mut packages = SlotMap::with_key();
+        let mut pkgid_key_mappings = HashMap::new();
         for package in &metadata.packages {
-            packages.insert_with_key(|key| Pkg {
-                cm_pkg: package.clone(),
-                key,
-                dependents: Vec::new(),
-                dependencies: Vec::new(),
+            packages.insert_with_key(|key| {
+                pkgid_key_mappings.insert(package.id.clone(), key);
+                Pkg {
+                    cm_pkg: package.clone(),
+                    key,
+                    dependents: Vec::new(),
+                    dependencies: Vec::new(),
+                    enabled_features: Vec::new(),
+                }
             });
+        }
+        if let Some(resolve) = metadata.resolve.as_ref() {
+            for node in &resolve.nodes {
+                let pkg_key = pkgid_key_mappings[&node.id];
+                packages[pkg_key]
+                    .enabled_features
+                    .clone_from(&node.features);
+            }
         }
         // Collect dependents
         gen_dep_graph_info(&mut packages);
