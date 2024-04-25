@@ -178,62 +178,6 @@ fn package_ui(
     central_top_bar(ui, gui, Some(pkg), project);
     ui.label(src_path.to_string());
     pkg_info_ui(ui, pkg, &project.packages, gui);
-    ui.add_space(16.0);
-    ui.label("Dependencies");
-    egui::ScrollArea::vertical().show(ui, |ui| {
-        egui::Grid::new("deps_grid").striped(true).show(ui, |ui| {
-            for dep in pkg.cm_pkg.dependencies.iter() {
-                ui.add(DepkindBadge(dep.kind));
-                if let Some(pkg) = project
-                    .packages
-                    .values()
-                    .find(|pkg| dep_matches_pkg(dep, pkg))
-                {
-                    ui.scope(|ui| {
-                        let re = ui.selectable_label(
-                            gui.sidebar_pkg == Some(pkg.key),
-                            egui::RichText::new(&pkg.cm_pkg.name)
-                                .color(gui.style.colors.highlighted_text)
-                                .strong(),
-                        );
-                        re.context_menu(|ui| {
-                            if ui
-                                .button("Focus")
-                                .on_hover_text(
-                                    "Focus in main view.\nDouble clicking has same effect.",
-                                )
-                                .clicked()
-                            {
-                                gui.focused_package = Some(pkg.key);
-                                ui.close_menu();
-                            }
-                        });
-                        if re.clicked() {
-                            gui.sidebar_pkg = Some(pkg.key);
-                        }
-                        if re.double_clicked() {
-                            gui.focused_package = Some(pkg.key);
-                            gui.sidebar_pkg = None;
-                        }
-                        ui.add(VersionBadge(&pkg.cm_pkg.version));
-                        additional_dep_info_ui(dep, ui);
-                    });
-                    if let Some(info) = &pkg.cm_pkg.description {
-                        ui.label(info);
-                    }
-                    ui.end_row();
-                } else {
-                    ui.scope(|ui| {
-                        ui.label(format!("{} {}", dep.name, dep.req));
-                        additional_dep_info_ui(dep, ui);
-                    });
-                    ui.label(egui::RichText::new("Unresolved").italics())
-                        .on_hover_text("Couldn't find a package for this dependency.");
-                    ui.end_row();
-                }
-            }
-        });
-    });
 }
 
 fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, project: &Project) {
@@ -392,8 +336,13 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             None => ui.label("Unknown"),
         };
     });
-    ui.add_space(2.0);
+    ui.separator();
+    egui::ScrollArea::vertical().show(ui, |ui| {
+        pkg_info_collapsibles_ui(pkg, gui, ui, packages);
+    });
+}
 
+fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, packages: &PkgSlotMap) {
     if !pkg.cm_pkg.features.is_empty() {
         cheader("Features", &gui.style).show(ui, |ui| {
             egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
@@ -435,6 +384,58 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
                     }
                 });
             }
+        });
+    }
+    if !pkg.dependencies.is_empty() {
+        cheader("Dependencies", &gui.style).show(ui, |ui| {
+            egui::Grid::new("deps_grid").striped(true).show(ui, |ui| {
+                for dep in pkg.cm_pkg.dependencies.iter() {
+                    ui.add(DepkindBadge(dep.kind));
+                    if let Some(pkg) = packages.values().find(|pkg| dep_matches_pkg(dep, pkg)) {
+                        ui.scope(|ui| {
+                            let re = ui.selectable_label(
+                                gui.sidebar_pkg == Some(pkg.key),
+                                egui::RichText::new(&pkg.cm_pkg.name)
+                                    .color(gui.style.colors.highlighted_text)
+                                    .strong(),
+                            );
+                            re.context_menu(|ui| {
+                                if ui
+                                    .button("Focus")
+                                    .on_hover_text(
+                                        "Focus in main view.\nDouble clicking has same effect.",
+                                    )
+                                    .clicked()
+                                {
+                                    gui.focused_package = Some(pkg.key);
+                                    ui.close_menu();
+                                }
+                            });
+                            if re.clicked() {
+                                gui.sidebar_pkg = Some(pkg.key);
+                            }
+                            if re.double_clicked() {
+                                gui.focused_package = Some(pkg.key);
+                                gui.sidebar_pkg = None;
+                            }
+                            ui.add(VersionBadge(&pkg.cm_pkg.version));
+                            additional_dep_info_ui(dep, ui);
+                        });
+                        if let Some(info) = &pkg.cm_pkg.description {
+                            ui.label(info);
+                        }
+                        ui.end_row();
+                    } else {
+                        ui.scope(|ui| {
+                            ui.label(format!("{} {}", dep.name, dep.req));
+                            additional_dep_info_ui(dep, ui);
+                        });
+                        ui.label(egui::RichText::new("Unresolved").italics())
+                            .on_hover_text("Couldn't find a package for this dependency.");
+                        ui.end_row();
+                    }
+                }
+            });
         });
     }
 }
