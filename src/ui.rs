@@ -65,7 +65,7 @@ impl Gui {
             settings_window: SettingsWindow::default(),
             style,
             tab: Tab::default(),
-            right_panel_left: window_width(egui_ctx),
+            right_panel_left: egui_ctx.available_rect().width(),
             pkg_list_filter: String::new(),
         }
     }
@@ -114,21 +114,9 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
             });
         gui.right_panel_left = re.response.rect.left();
     } else {
-        gui.right_panel_left = window_width(ctx);
+        gui.right_panel_left = ctx.available_rect().width();
     }
     gui.settings_window.ui(ctx, &mut gui.style);
-}
-
-fn window_width(ctx: &egui::Context) -> f32 {
-    ctx.input(|inp| {
-        // This returns `None` on wayland. Not sure if there is a better way to
-        // get window width
-        inp.viewport()
-            .inner_rect
-            .map(|r| r.width())
-            // Magical fallback value to not completely break the application
-            .unwrap_or(1280.)
-    })
 }
 
 struct DepkindBadge(DependencyKind);
