@@ -119,17 +119,40 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
     gui.settings_window.ui(ctx, &mut gui.style);
 }
 
-struct DepkindBadge(DependencyKind);
+struct DepkindBadge<'s> {
+    kind: DependencyKind,
+    style: &'s Style,
+}
 
-impl egui::Widget for DepkindBadge {
+impl<'s> egui::Widget for DepkindBadge<'s> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let (text, bg_color) = match self.0 {
-            DependencyKind::Normal => ("normal", egui::Color32::from_rgb(91, 52, 197)),
-            DependencyKind::Development => ("dev", egui::Color32::from_rgb(32, 60, 18)),
-            DependencyKind::Build => ("build", egui::Color32::from_rgb(78, 40, 25)),
-            DependencyKind::Unknown => ("unknown", egui::Color32::from_rgb(115, 115, 115)),
+        let (text, bg_color, text_color) = match self.kind {
+            DependencyKind::Normal => (
+                "normal",
+                self.style.colors.inactive_weak_bg_fill,
+                self.style.colors.inactive_fg_stroke,
+            ),
+            DependencyKind::Development => {
+                ("dev", egui::Color32::from_rgb(32, 60, 18), Color32::YELLOW)
+            }
+            DependencyKind::Build => (
+                "build",
+                egui::Color32::from_rgb(78, 40, 25),
+                Color32::YELLOW,
+            ),
+            DependencyKind::Unknown => (
+                "unknown",
+                egui::Color32::from_rgb(115, 115, 115),
+                Color32::YELLOW,
+            ),
         };
-        badge(ui, text, bg_color, Color32::YELLOW)
+        badge(ui, text, bg_color, text_color)
+    }
+}
+
+impl<'a> DepkindBadge<'a> {
+    fn new(kind: DependencyKind, style: &'a crate::style::Style) -> Self {
+        Self { kind, style }
     }
 }
 
@@ -143,16 +166,25 @@ fn badge(ui: &mut egui::Ui, text: &str, bg_color: Color32, text_color: Color32) 
     re.with_new_rect(rect)
 }
 
-struct VersionBadge<'a>(&'a Version);
+struct VersionBadge<'a> {
+    ver: &'a Version,
+    bg_color: Color32,
+    text_color: Color32,
+}
+
+impl<'a> VersionBadge<'a> {
+    fn new(ver: &'a Version, style: &crate::style::Style) -> Self {
+        Self {
+            ver,
+            bg_color: style.colors.inactive_weak_bg_fill,
+            text_color: style.colors.inactive_fg_stroke,
+        }
+    }
+}
 
 impl<'a> egui::Widget for VersionBadge<'a> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        badge(
-            ui,
-            &self.0.to_string(),
-            Color32::from_rgb(69, 11, 86),
-            Color32::WHITE,
-        )
+        badge(ui, &self.ver.to_string(), self.bg_color, self.text_color)
     }
 }
 
@@ -365,8 +397,8 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                         gui.focused_package = Some(link.pkg_key);
                         gui.sidebar_pkg = None;
                     }
-                    ui.add(VersionBadge(&dpkg.cm_pkg.version));
-                    ui.add(DepkindBadge(link.kind));
+                    ui.add(VersionBadge::new(&dpkg.cm_pkg.version, &gui.style));
+                    ui.add(DepkindBadge::new(link.kind, &gui.style));
                     if let Some(platform) = &link.target {
                         ui.label(platform.to_string());
                     }
@@ -378,7 +410,7 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
         cheader("Dependencies", &gui.style).show(ui, |ui| {
             egui::Grid::new("deps_grid").striped(true).show(ui, |ui| {
                 for dep in pkg.cm_pkg.dependencies.iter() {
-                    ui.add(DepkindBadge(dep.kind));
+                    ui.add(DepkindBadge::new(dep.kind, &gui.style));
                     if let Some(pkg) = packages.values().find(|pkg| dep_matches_pkg(dep, pkg)) {
                         ui.scope(|ui| {
                             let re = ui.selectable_label(
@@ -406,7 +438,7 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                                 gui.focused_package = Some(pkg.key);
                                 gui.sidebar_pkg = None;
                             }
-                            ui.add(VersionBadge(&pkg.cm_pkg.version));
+                            ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
                             additional_dep_info_ui(dep, ui);
                         });
                         if let Some(info) = &pkg.cm_pkg.description {
@@ -514,7 +546,7 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
                         gui.sidebar_pkg = None;
                         gui.tab = Tab::ViewSingle;
                     }
-                    ui.add(VersionBadge(&pkg.cm_pkg.version));
+                    ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
                 });
                 if let Some(info) = &pkg.cm_pkg.description {
                     ui.label(info);
