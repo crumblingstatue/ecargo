@@ -83,6 +83,8 @@ pub fn dep_matches_pkg(dep: &cargo_metadata::Dependency, pkg: &Pkg) -> bool {
     pkg.cm_pkg.name == dep.name && dep.req.matches(&pkg.cm_pkg.version)
 }
 
+// When I made this I didn't realize `cargo_metadata` supplied this information through `resolve`,
+// but I don't feel like rewriting it right now.
 fn gen_dep_graph_info(pkgs: &mut PkgSlotMap) {
     let keys: Vec<PkgKey> = pkgs.keys().collect();
     for a in &keys {
