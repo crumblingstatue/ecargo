@@ -26,3 +26,7 @@ Get a good idea for how a package fits into your dependency chain, including:
 - List of dependencies for each package
 - What features are enabled?
 - Which packages depend on this package?
+
+
+### Glorious crates.io theme
+What more do you need?
