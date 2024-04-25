@@ -389,7 +389,11 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
             for link in &pkg.dependents {
                 ui.horizontal(|ui| {
                     let dpkg = &packages[link.pkg_key];
-                    let re = ui.button(&dpkg.cm_pkg.name);
+                    let re = ui.selectable_label(
+                        false,
+                        egui::RichText::new(&dpkg.cm_pkg.name)
+                            .color(gui.style.colors.highlighted_text),
+                    );
                     if re.clicked() {
                         gui.sidebar_pkg = Some(link.pkg_key);
                     }
