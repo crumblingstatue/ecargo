@@ -157,7 +157,7 @@ impl<'a> DepkindBadge<'a> {
 }
 
 fn badge(ui: &mut egui::Ui, text: &str, bg_color: Color32, text_color: Color32) -> egui::Response {
-    let label = egui::Label::new(text);
+    let label = egui::Label::new(egui::RichText::new(text).size(13.0));
     let (pos, galley, re) = label.layout_in_ui(ui);
     let painter = ui.painter();
     let rect = re.rect.expand(2.0);
