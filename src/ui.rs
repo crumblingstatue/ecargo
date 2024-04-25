@@ -109,7 +109,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.button("X").clicked() {
+                        if ui.button("🗙").clicked() {
                             gui.sidebar_pkg = None;
                         }
                     });
