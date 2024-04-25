@@ -190,7 +190,13 @@ fn package_ui(
                                 .strong(),
                         );
                         re.context_menu(|ui| {
-                            if ui.button("Set as focused package").clicked() {
+                            if ui
+                                .button("Focus")
+                                .on_hover_text(
+                                    "Focus in main view.\nDouble clicking has same effect.",
+                                )
+                                .clicked()
+                            {
                                 gui.focused_package = Some(pkg.key);
                                 ui.close_menu();
                             }
