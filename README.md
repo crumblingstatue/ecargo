@@ -30,3 +30,5 @@ Get a good idea for how a package fits into your dependency chain, including:
 
 ### Glorious crates.io theme
 What more do you need?
+
+Don't worry, you can also use the vanilla dark and light egui themes.
