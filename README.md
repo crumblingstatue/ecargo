@@ -37,3 +37,9 @@ Don't worry, you can also use the vanilla dark and light egui themes.
 `cargo install ecargo`
 
 There are no pre-built artifacts at the moment, but that may change.
+
+## Usage
+Ecargo requires a path to a cargo project to work with, so you need to run `ecargo` in
+one of the following two ways:
+1. In the working directory of a cargo project, just run `ecargo`
+2. You can give `ecargo` a path to a cargo project: `ecargo /path/to/my/project` 
