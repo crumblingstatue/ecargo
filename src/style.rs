@@ -39,6 +39,7 @@ pub struct Colors {
     pub selection_stroke: Color32,
     pub extreme_bg: Color32,
     pub text_edit_text: Color32,
+    pub widgets_active_fg_stroke: Color32,
 }
 
 #[derive(Clone, Copy)]
@@ -74,6 +75,7 @@ pub fn crates_io() -> Style {
             selection_stroke: Color32::from_rgb(213, 167, 42),
             extreme_bg: Color32::WHITE,
             text_edit_text: Color32::BLACK,
+            widgets_active_fg_stroke: Color32::from_rgb(115, 0, 0),
         },
         icons: Icons { settings: "⚙" },
     }
@@ -111,6 +113,7 @@ pub fn vanilla_egui(
             selection_stroke: visuals.selection.stroke.color,
             extreme_bg: visuals.extreme_bg_color,
             text_edit_text: visuals.widgets.inactive.text_color(),
+            widgets_active_fg_stroke: visuals.widgets.active.fg_stroke.color,
         },
         icons: Icons { settings: "⚙" },
     }
@@ -154,5 +157,6 @@ pub fn apply_style(egui_ctx: &egui::Context, style: Style) {
         egui_style.visuals.widgets.hovered.fg_stroke.color = style.colors.hover_fg_stroke;
         egui_style.visuals.selection.stroke.color = style.colors.selection_stroke;
         egui_style.visuals.extreme_bg_color = style.colors.extreme_bg;
+        egui_style.visuals.widgets.active.fg_stroke.color = style.colors.widgets_active_fg_stroke;
     });
 }

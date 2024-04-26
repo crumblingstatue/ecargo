@@ -6,6 +6,7 @@ use {
     },
     cargo_metadata::{camino::Utf8PathBuf, semver::Version, DependencyKind},
     eframe::egui::{self, Align2, Color32},
+    egui_commonmark::{CommonMarkCache, CommonMarkViewer},
     egui_modal::Modal,
 };
 
@@ -18,6 +19,8 @@ pub struct Gui {
     pub tab: Tab,
     pub right_panel_left: f32,
     pub pkg_list_filter: String,
+    pub readme: String,
+    pub cm_cache: CommonMarkCache,
 }
 
 #[derive(Default, PartialEq)]
@@ -25,6 +28,7 @@ pub enum Tab {
     #[default]
     ViewSingle,
     PackageList,
+    Readme,
 }
 
 #[derive(Default)]
@@ -67,6 +71,8 @@ impl Gui {
             tab: Tab::default(),
             right_panel_left: egui_ctx.available_rect().width(),
             pkg_list_filter: String::new(),
+            readme: String::new(),
+            cm_cache: CommonMarkCache::default(),
         }
     }
 }
@@ -93,6 +99,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
             Tab::PackageList => {
                 package_list_ui(project, ui, gui);
             }
+            Tab::Readme => readme_ui(ui, gui, None, project),
         },
         None => {
             ui.heading(project.metadata.workspace_root.to_string());
@@ -213,6 +220,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, p
                     .unwrap_or("Single view"),
             ),
             (Tab::PackageList, "Packages"),
+            (Tab::Readme, "Readme"),
         ] {
             if ui
                 .selectable_label(
@@ -349,6 +357,14 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
         ui.horizontal(|ui| {
             ui.label("Docs link");
             ui.hyperlink(info);
+        });
+    }
+    if let Some(path) = &pkg.readme_path {
+        ui.horizontal(|ui| {
+            if ui.link("Readme").clicked() {
+                gui.readme = std::fs::read_to_string(path).unwrap();
+                gui.tab = Tab::Readme;
+            }
         });
     }
     ui.horizontal(|ui| {
@@ -560,5 +576,12 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
                 ui.end_row();
             }
         });
+    });
+}
+
+fn readme_ui(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, project: &Project) {
+    central_top_bar(ui, gui, active_pkg, project);
+    egui::ScrollArea::vertical().show(ui, |ui| {
+        CommonMarkViewer::new("readme_view").show(ui, &mut gui.cm_cache, &gui.readme);
     });
 }

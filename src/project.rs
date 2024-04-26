@@ -18,6 +18,7 @@ pub struct Pkg {
     pub dependencies: Vec<DepLink>,
     pub enabled_features: Vec<String>,
     pub manifest_dir: Utf8PathBuf,
+    pub readme_path: Option<Utf8PathBuf>,
 }
 
 pub type PkgSlotMap = SlotMap<PkgKey, Pkg>;
@@ -42,13 +43,16 @@ impl Project {
         for package in &metadata.packages {
             packages.insert_with_key(|key| {
                 pkgid_key_mappings.insert(package.id.clone(), key);
+                let manifest_dir = package.manifest_path.parent().unwrap().to_owned();
+                let readme_path = manifest_dir.join("README.md");
                 Pkg {
                     cm_pkg: package.clone(),
                     key,
                     dependents: Vec::new(),
                     dependencies: Vec::new(),
                     enabled_features: Vec::new(),
-                    manifest_dir: package.manifest_path.parent().unwrap().to_owned(),
+                    manifest_dir,
+                    readme_path: readme_path.exists().then_some(readme_path),
                 }
             });
         }
