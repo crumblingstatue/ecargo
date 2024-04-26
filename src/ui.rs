@@ -368,6 +368,14 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             }
         });
     }
+    if let Some(path) = &pkg.changelog_path {
+        ui.horizontal(|ui| {
+            if ui.link("Changelog").clicked() {
+                gui.readme = std::fs::read_to_string(path).unwrap();
+                gui.tab = Tab::Readme;
+            }
+        });
+    }
     ui.horizontal(|ui| {
         ui.label("License");
         match &pkg.cm_pkg.license {
