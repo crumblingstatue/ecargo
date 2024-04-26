@@ -1,5 +1,5 @@
 use {
-    cargo_metadata::{DependencyKind, Metadata, MetadataCommand, Package},
+    cargo_metadata::{camino::Utf8PathBuf, DependencyKind, Metadata, MetadataCommand, Package},
     cargo_platform::Platform,
     slotmap::{new_key_type, SlotMap},
     std::{collections::HashMap, path::Path},
@@ -17,6 +17,7 @@ pub struct Pkg {
     pub dependents: Vec<DepLink>,
     pub dependencies: Vec<DepLink>,
     pub enabled_features: Vec<String>,
+    pub manifest_dir: Utf8PathBuf,
 }
 
 pub type PkgSlotMap = SlotMap<PkgKey, Pkg>;
@@ -47,6 +48,7 @@ impl Project {
                     dependents: Vec::new(),
                     dependencies: Vec::new(),
                     enabled_features: Vec::new(),
+                    manifest_dir: package.manifest_path.parent().unwrap().to_owned(),
                 }
             });
         }

@@ -88,7 +88,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
         Some(id) => match gui.tab {
             Tab::ViewSingle => {
                 let pkg = &project.packages[id];
-                package_ui(project, pkg, &pkg.cm_pkg.manifest_path, ui, gui);
+                package_ui(project, pkg, &pkg.manifest_dir, ui, gui);
             }
             Tab::PackageList => {
                 package_list_ui(project, ui, gui);
@@ -191,12 +191,14 @@ impl<'a> egui::Widget for VersionBadge<'a> {
 fn package_ui(
     project: &Project,
     pkg: &Pkg,
-    src_path: &Utf8PathBuf,
+    manifest_dir: &Utf8PathBuf,
     ui: &mut egui::Ui,
     gui: &mut Gui,
 ) {
     central_top_bar(ui, gui, Some(pkg), project);
-    ui.label(src_path.to_string());
+    if ui.link(manifest_dir.as_str()).clicked() {
+        let _ = open::that(manifest_dir);
+    }
     pkg_info_ui(ui, pkg, &project.packages, gui);
 }
 
