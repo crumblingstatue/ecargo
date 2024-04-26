@@ -586,6 +586,10 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
 fn readme_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
     central_top_bar(ui, gui, project);
     egui::ScrollArea::vertical().show(ui, |ui| {
+        if gui.style.name == "crates.io" {
+            // Hack to make things more legible
+            ui.style_mut().visuals = egui::Visuals::light();
+        }
         CommonMarkViewer::new("readme_view").show(ui, &mut gui.cm_cache, &gui.readme);
     });
 }
