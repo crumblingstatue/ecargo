@@ -4,7 +4,7 @@ use {
         project::{dep_matches_pkg, Pkg, PkgKey, PkgSlotMap, Project},
         style::{Colors, Style},
     },
-    cargo_metadata::{camino::Utf8PathBuf, semver::Version, DependencyKind},
+    cargo_metadata::{semver::Version, DependencyKind},
     eframe::egui::{self, Align2, Color32},
     egui_commonmark::{CommonMarkCache, CommonMarkViewer},
     egui_modal::Modal,
@@ -94,7 +94,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
         Some(id) => match gui.tab {
             Tab::ViewSingle => {
                 let pkg = &project.packages[id];
-                package_ui(project, pkg, &pkg.manifest_dir, ui, gui);
+                package_ui(project, pkg, ui, gui);
             }
             Tab::PackageList => {
                 package_list_ui(project, ui, gui);
@@ -195,17 +195,8 @@ impl<'a> egui::Widget for VersionBadge<'a> {
     }
 }
 
-fn package_ui(
-    project: &Project,
-    pkg: &Pkg,
-    manifest_dir: &Utf8PathBuf,
-    ui: &mut egui::Ui,
-    gui: &mut Gui,
-) {
+fn package_ui(project: &Project, pkg: &Pkg, ui: &mut egui::Ui, gui: &mut Gui) {
     central_top_bar(ui, gui, project);
-    if ui.link(manifest_dir.as_str()).clicked() {
-        let _ = open::that(manifest_dir);
-    }
     pkg_info_ui(ui, pkg, &project.packages, gui);
 }
 
@@ -284,11 +275,18 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
                 .color(gui.style.colors.highlighted_text),
         );
         if gui.focused_package != Some(pkg.key)
-            && ui.button("🗁").on_hover_text("Open in main view").clicked()
+            && ui.button("👁").on_hover_text("Open in main view").clicked()
         {
             gui.focused_package = Some(pkg.key);
             gui.sidebar_pkg = None;
             gui.tab = Tab::ViewSingle;
+        }
+        if ui
+            .button("🗁")
+            .on_hover_text(format!("{}\nClick to open", pkg.manifest_dir.as_str()))
+            .clicked()
+        {
+            let _ = open::that(&pkg.manifest_dir);
         }
     });
     if let Some(desc) = &pkg.cm_pkg.description {
