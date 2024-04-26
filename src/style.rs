@@ -61,7 +61,7 @@ pub fn crates_io() -> Style {
         colors: Colors {
             panel_fill: Color32::from_rgb(249, 247, 236),
             hyperlink_color: Color32::from_rgb(3, 123, 66),
-            selected_bg_fill: Color32::from_rgb(206, 247, 197),
+            selected_bg_fill: Color32::from_rgb(84, 176, 38),
             hover_weak_bg_fill: Color32::from_rgb(206, 247, 197),
             active_weak_bg_fill: Color32::from_rgb(47, 155, 23),
             noninteractive_fg: Color32::from_rgb(101, 114, 120),
