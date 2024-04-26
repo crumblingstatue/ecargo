@@ -99,7 +99,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
             Tab::PackageList => {
                 package_list_ui(project, ui, gui);
             }
-            Tab::Readme => readme_ui(ui, gui, None, project),
+            Tab::Readme => readme_ui(ui, gui, project),
         },
         None => {
             ui.heading(project.metadata.workspace_root.to_string());
@@ -202,16 +202,17 @@ fn package_ui(
     ui: &mut egui::Ui,
     gui: &mut Gui,
 ) {
-    central_top_bar(ui, gui, Some(pkg), project);
+    central_top_bar(ui, gui, project);
     if ui.link(manifest_dir.as_str()).clicked() {
         let _ = open::that(manifest_dir);
     }
     pkg_info_ui(ui, pkg, &project.packages, gui);
 }
 
-fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, project: &Project) {
+fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
     ui.horizontal(|ui| {
         ui.set_width(gui.right_panel_left - 16.0);
+        let active_pkg = gui.focused_package.map(|key| &project.packages[key]);
         for (tab, tabname) in [
             (
                 Tab::ViewSingle,
@@ -516,12 +517,7 @@ fn header_icon(ui: &mut egui::Ui, openness: f32, response: &egui::Response, colo
 }
 
 fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
-    central_top_bar(
-        ui,
-        gui,
-        gui.focused_package.map(|key| &project.packages[key]),
-        project,
-    );
+    central_top_bar(ui, gui, project);
     let mut filtered: Vec<_> = project.packages.keys().collect();
     ui.horizontal(|ui| {
         ui.add(
@@ -579,8 +575,8 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
     });
 }
 
-fn readme_ui(ui: &mut egui::Ui, gui: &mut Gui, active_pkg: Option<&Pkg>, project: &Project) {
-    central_top_bar(ui, gui, active_pkg, project);
+fn readme_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
+    central_top_bar(ui, gui, project);
     egui::ScrollArea::vertical().show(ui, |ui| {
         CommonMarkViewer::new("readme_view").show(ui, &mut gui.cm_cache, &gui.readme);
     });
