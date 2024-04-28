@@ -15,6 +15,7 @@ fn main() {
         NativeOptions::default(),
         Box::new(|cc| {
             Box::new({
+                egui_extras::install_image_loaders(&cc.egui_ctx);
                 cc.egui_ctx
                     .send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(1280., 720.)));
                 let mut app = App::new(&cc.egui_ctx).unwrap();

@@ -17,6 +17,8 @@ open = "5.1.2"
 directories = "5.0.1"
 toml = "0.8.12"
 serde = { version = "1.0.199", features = ["derive"] }
+egui_extras = { version = "0.27.2", features = ["file", "http", "svg"] }
+image = { version = "0.24", features = ["png"] }
 
 [profile.release]
 panic = "abort"
