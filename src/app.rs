@@ -39,7 +39,7 @@ impl App {
     pub(crate) fn load_project(&mut self, path: &Path) {
         match Project::load(path) {
             Ok(proj) => {
-                self.gui.focused_package = proj.root;
+                self.gui.primary_pkg = proj.root;
                 self.project = Some(proj);
             }
             Err(e) => {

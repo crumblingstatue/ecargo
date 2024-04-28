@@ -13,8 +13,10 @@ use {
 
 pub struct Gui {
     pub modal: Modal,
-    pub sidebar_pkg: Option<PkgKey>,
-    pub focused_package: Option<PkgKey>,
+    /// Primarily viewed package (i.e. main view)
+    pub primary_pkg: Option<PkgKey>,
+    /// Secondarily viewer package (i.e. sidebar)
+    pub secondary_pkg: Option<PkgKey>,
     pub settings_window: SettingsWindow,
     pub style: Style,
     pub tab: Tab,
@@ -74,8 +76,8 @@ impl Gui {
         crate::style::apply_style(egui_ctx, style.clone());
         Self {
             modal: Modal::new(egui_ctx, "modal_dialog"),
-            sidebar_pkg: None,
-            focused_package: None,
+            secondary_pkg: None,
+            primary_pkg: None,
             settings_window: SettingsWindow::default(),
             style,
             tab: Tab::default(),
@@ -100,7 +102,7 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
 }
 
 pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
-    egui::CentralPanel::default().show(ctx, |ui| match gui.focused_package {
+    egui::CentralPanel::default().show(ctx, |ui| match gui.primary_pkg {
         Some(id) => match gui.tab {
             Tab::ViewSingle => {
                 let pkg = &project.packages[id];
@@ -115,14 +117,14 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &m
             ui.heading(project.metadata.workspace_root.to_string());
         }
     });
-    if let Some(key) = gui.sidebar_pkg {
+    if let Some(key) = gui.secondary_pkg {
         let re = egui::SidePanel::right("right_panel")
             .max_width(ctx.available_rect().width() / 2.5)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui.button("🗙").clicked() {
-                            gui.sidebar_pkg = None;
+                            gui.secondary_pkg = None;
                         }
                     });
                 });
@@ -213,7 +215,7 @@ fn package_ui(project: &Project, pkg: &Pkg, ui: &mut egui::Ui, gui: &mut Gui, cf
 fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
     ui.horizontal(|ui| {
         ui.set_width(gui.right_panel_left - 16.0);
-        let active_pkg = gui.focused_package.map(|key| &project.packages[key]);
+        let active_pkg = gui.primary_pkg.map(|key| &project.packages[key]);
         for (tab, tabname) in [
             (
                 Tab::ViewSingle,
@@ -245,7 +247,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
                         .link(format!("go to root ({})", pkg.cm_pkg.name))
                         .clicked()
                     {
-                        gui.focused_package = Some(pkg.key);
+                        gui.primary_pkg = Some(pkg.key);
                         gui.tab = Tab::ViewSingle;
                     }
                 }
@@ -284,11 +286,11 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
                 .heading()
                 .color(gui.style.colors.highlighted_text),
         );
-        if gui.focused_package != Some(pkg.key)
+        if gui.primary_pkg != Some(pkg.key)
             && ui.button("👁").on_hover_text("Open in main view").clicked()
         {
-            gui.focused_package = Some(pkg.key);
-            gui.sidebar_pkg = None;
+            gui.primary_pkg = Some(pkg.key);
+            gui.secondary_pkg = None;
             gui.tab = Tab::ViewSingle;
         }
         if ui
@@ -468,11 +470,11 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                             .color(gui.style.colors.highlighted_text),
                     );
                     if re.clicked() {
-                        gui.sidebar_pkg = Some(link.pkg_key);
+                        gui.secondary_pkg = Some(link.pkg_key);
                     }
                     if re.double_clicked() {
-                        gui.focused_package = Some(link.pkg_key);
-                        gui.sidebar_pkg = None;
+                        gui.primary_pkg = Some(link.pkg_key);
+                        gui.secondary_pkg = None;
                     }
                     ui.add(VersionBadge::new(&dpkg.cm_pkg.version, &gui.style));
                     ui.add(DepkindBadge::new(link.kind, &gui.style));
@@ -491,7 +493,7 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                     if let Some(pkg) = packages.values().find(|pkg| dep_matches_pkg(dep, pkg)) {
                         ui.scope(|ui| {
                             let re = ui.selectable_label(
-                                gui.sidebar_pkg == Some(pkg.key),
+                                gui.secondary_pkg == Some(pkg.key),
                                 egui::RichText::new(&pkg.cm_pkg.name)
                                     .color(gui.style.colors.highlighted_text)
                                     .strong(),
@@ -504,16 +506,16 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                                     )
                                     .clicked()
                                 {
-                                    gui.focused_package = Some(pkg.key);
+                                    gui.primary_pkg = Some(pkg.key);
                                     ui.close_menu();
                                 }
                             });
                             if re.clicked() {
-                                gui.sidebar_pkg = Some(pkg.key);
+                                gui.secondary_pkg = Some(pkg.key);
                             }
                             if re.double_clicked() {
-                                gui.focused_package = Some(pkg.key);
-                                gui.sidebar_pkg = None;
+                                gui.primary_pkg = Some(pkg.key);
+                                gui.secondary_pkg = None;
                             }
                             ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
                             additional_dep_info_ui(dep, ui);
@@ -606,16 +608,16 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
                 let pkg = &project.packages[key];
                 ui.scope(|ui| {
                     let re = ui.selectable_label(
-                        gui.sidebar_pkg == Some(key),
+                        gui.secondary_pkg == Some(key),
                         egui::RichText::new(&pkg.cm_pkg.name)
                             .color(gui.style.colors.highlighted_text),
                     );
                     if re.clicked() {
-                        gui.sidebar_pkg = Some(key);
+                        gui.secondary_pkg = Some(key);
                     }
                     if re.double_clicked() {
-                        gui.focused_package = Some(key);
-                        gui.sidebar_pkg = None;
+                        gui.primary_pkg = Some(key);
+                        gui.secondary_pkg = None;
                         gui.tab = Tab::ViewSingle;
                     }
                     ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
