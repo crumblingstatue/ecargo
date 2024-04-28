@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Open in terminal button. Opens the package's working directory in the terminal of your choice.
 
+- `View Cargo.toml.orig` button. Allows you to view the original `Cargo.toml` file of a package.
+
 ### Changed
 
 - In the main view, the link containing the source folder location was removed in favor of a

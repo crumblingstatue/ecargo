@@ -292,8 +292,28 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             gui.tab = Tab::ViewSingle;
         }
         if ui
+            .button("🖹")
+            .on_hover_text("View Cargo.toml.orig")
+            .clicked()
+        {
+            match std::fs::read_to_string(pkg.manifest_dir.join("Cargo.toml.orig")) {
+                Ok(data) => {
+                    gui.readme = format!("```toml\n{data}\n```");
+                    gui.tab = Tab::Readme;
+                }
+                Err(e) => {
+                    gui.modal
+                        .dialog()
+                        .with_title("Error")
+                        .with_icon(egui_modal::Icon::Error)
+                        .with_body(format!("Could not open Cargo.toml.orig: {e}"))
+                        .open();
+                }
+            }
+        }
+        if ui
             .button("🗁")
-            .on_hover_text(format!("{}\nClick to open", pkg.manifest_dir.as_str()))
+            .on_hover_text(format!("{}\nOpen directory", pkg.manifest_dir.as_str()))
             .clicked()
         {
             let _ = open::that(&pkg.manifest_dir);
