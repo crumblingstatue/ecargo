@@ -173,7 +173,11 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
             if ui.button(icon).on_hover_text(tooltip).clicked() {
                 gui.show_sidebar ^= true;
             }
-            if ui.button(gui.style.icons.settings).clicked() {
+            if ui
+                .button(gui.style.icons.settings)
+                .on_hover_text("Settings")
+                .clicked()
+            {
                 gui.settings_window.open ^= true;
             }
             match project.root {
