@@ -24,9 +24,31 @@ pub struct Gui {
     pub tab: Tab,
     pub right_panel_left: f32,
     pub pkg_list_filter: String,
-    pub markdown: String,
+    md: MdContent,
     pub cm_cache: CommonMarkCache,
     pub show_sidebar: bool,
+}
+
+/// Markdown content
+#[derive(Default)]
+struct MdContent {
+    md: String,
+    kind: MdContentKind,
+    key: PkgKey,
+}
+
+impl MdContent {
+    fn new(md: String, kind: MdContentKind, key: PkgKey) -> Self {
+        Self { md, kind, key }
+    }
+}
+
+#[derive(Default, Clone, Copy)]
+enum MdContentKind {
+    #[default]
+    Readme,
+    Changelog,
+    CargoToml,
 }
 
 #[derive(Default, PartialEq)]
@@ -86,7 +108,7 @@ impl Gui {
             tab: Tab::default(),
             right_panel_left: egui_ctx.available_rect().width(),
             pkg_list_filter: String::new(),
-            markdown: String::new(),
+            md: MdContent::default(),
             cm_cache: CommonMarkCache::default(),
             show_sidebar: true,
         }
@@ -140,10 +162,20 @@ fn package_ui(project: &Project, pkg: &Pkg, ui: &mut egui::Ui, gui: &mut Gui, cf
     pkg_info_ui(ui, pkg, &project.packages, gui, cfg);
 }
 
+fn markdown_tab_label(kind: MdContentKind, pkgname: &str) -> String {
+    let tabkind = match kind {
+        MdContentKind::Readme => "Readme",
+        MdContentKind::Changelog => "Changelog",
+        MdContentKind::CargoToml => "Cargo.toml",
+    };
+    format!("{tabkind} - {pkgname}")
+}
+
 fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
     ui.horizontal(|ui| {
         ui.set_width(gui.right_panel_left - 16.0);
         let active_pkg = gui.primary_pkg.map(|key| &project.packages[key]);
+        let tab_str_buf;
         for (tab, tabname) in [
             (
                 Tab::ViewSingle,
@@ -152,7 +184,21 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
                     .unwrap_or("Single view"),
             ),
             (Tab::PackageList, "Packages"),
-            (Tab::Markdown, "Markdown"),
+            (Tab::Markdown, {
+                if gui.md.md.is_empty() {
+                    "Markdown"
+                } else {
+                    tab_str_buf = markdown_tab_label(
+                        gui.md.kind,
+                        project
+                            .packages
+                            .get(gui.md.key)
+                            .map(|pkg| pkg.cm_pkg.name.as_str())
+                            .unwrap_or("Unknown"),
+                    );
+                    &tab_str_buf
+                }
+            }),
         ] {
             if ui
                 .selectable_label(
@@ -240,7 +286,11 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
         {
             match std::fs::read_to_string(pkg.manifest_dir.join("Cargo.toml.orig")) {
                 Ok(data) => {
-                    gui.markdown = format!("```toml\n{data}\n```");
+                    gui.md = MdContent::new(
+                        format!("```toml\n{data}\n```"),
+                        MdContentKind::CargoToml,
+                        pkg.key,
+                    );
                     gui.tab = Tab::Markdown;
                 }
                 Err(e) => {
@@ -351,7 +401,11 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     if let Some(path) = &pkg.readme_path {
         ui.horizontal(|ui| {
             if ui.link("Readme").clicked() {
-                gui.markdown = std::fs::read_to_string(path).unwrap();
+                gui.md = MdContent::new(
+                    std::fs::read_to_string(path).unwrap(),
+                    MdContentKind::Readme,
+                    pkg.key,
+                );
                 gui.tab = Tab::Markdown;
             }
         });
@@ -359,7 +413,11 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     if let Some(path) = &pkg.changelog_path {
         ui.horizontal(|ui| {
             if ui.link("Changelog").clicked() {
-                gui.markdown = std::fs::read_to_string(path).unwrap();
+                gui.md = MdContent::new(
+                    std::fs::read_to_string(path).unwrap(),
+                    MdContentKind::Changelog,
+                    pkg.key,
+                );
                 gui.tab = Tab::Markdown;
             }
         });
@@ -581,6 +639,6 @@ fn markdown_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
             // Hack to make things more legible
             ui.style_mut().visuals = egui::Visuals::light();
         }
-        CommonMarkViewer::new("md_view").show(ui, &mut gui.cm_cache, &gui.markdown);
+        CommonMarkViewer::new("md_view").show(ui, &mut gui.cm_cache, &gui.md.md);
     });
 }
