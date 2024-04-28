@@ -28,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
   There is an additional eye icon now which focuses the package in the main view.
 
+- The close button on the sidebar's right side got replaced by a sidebar toggle button
+  in the top panel's right side.
+
 ### Fixed
 
 - crates.io theme: Make selected text more legible (higher color contrast)
