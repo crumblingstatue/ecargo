@@ -1,15 +1,17 @@
 use {
+    self::widgets::{badge, DepkindBadge, VersionBadge},
     crate::{
         app::App,
         config::Config,
         project::{dep_matches_pkg, Pkg, PkgKey, PkgSlotMap, Project},
         style::{Colors, Style},
     },
-    cargo_metadata::{semver::Version, DependencyKind},
-    eframe::egui::{self, Align2, Color32},
+    eframe::egui::{self, Align2},
     egui_commonmark::{CommonMarkCache, CommonMarkViewer},
     egui_modal::Modal,
 };
+
+mod widgets;
 
 pub struct Gui {
     pub modal: Modal,
@@ -136,75 +138,6 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &m
         gui.right_panel_left = ctx.available_rect().width();
     }
     gui.settings_window.ui(ctx, &mut gui.style, cfg);
-}
-
-struct DepkindBadge<'s> {
-    kind: DependencyKind,
-    style: &'s Style,
-}
-
-impl<'s> egui::Widget for DepkindBadge<'s> {
-    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let (text, bg_color, text_color) = match self.kind {
-            DependencyKind::Normal => (
-                "normal",
-                self.style.colors.inactive_weak_bg_fill,
-                self.style.colors.inactive_fg_stroke,
-            ),
-            DependencyKind::Development => {
-                ("dev", egui::Color32::from_rgb(32, 60, 18), Color32::YELLOW)
-            }
-            DependencyKind::Build => (
-                "build",
-                egui::Color32::from_rgb(78, 40, 25),
-                Color32::YELLOW,
-            ),
-            DependencyKind::Unknown => (
-                "unknown",
-                egui::Color32::from_rgb(115, 115, 115),
-                Color32::YELLOW,
-            ),
-        };
-        badge(ui, text, bg_color, text_color)
-    }
-}
-
-impl<'a> DepkindBadge<'a> {
-    fn new(kind: DependencyKind, style: &'a crate::style::Style) -> Self {
-        Self { kind, style }
-    }
-}
-
-fn badge(ui: &mut egui::Ui, text: &str, bg_color: Color32, text_color: Color32) -> egui::Response {
-    let label = egui::Label::new(egui::RichText::new(text).size(13.0));
-    let (pos, galley, re) = label.layout_in_ui(ui);
-    let painter = ui.painter();
-    let rect = re.rect.expand(2.0);
-    painter.rect_filled(rect, 2.0, bg_color);
-    painter.galley(pos, galley, text_color);
-    re.with_new_rect(rect)
-}
-
-struct VersionBadge<'a> {
-    ver: &'a Version,
-    bg_color: Color32,
-    text_color: Color32,
-}
-
-impl<'a> VersionBadge<'a> {
-    fn new(ver: &'a Version, style: &crate::style::Style) -> Self {
-        Self {
-            ver,
-            bg_color: style.colors.inactive_weak_bg_fill,
-            text_color: style.colors.inactive_fg_stroke,
-        }
-    }
-}
-
-impl<'a> egui::Widget for VersionBadge<'a> {
-    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        badge(ui, &self.ver.to_string(), self.bg_color, self.text_color)
-    }
 }
 
 fn package_ui(project: &Project, pkg: &Pkg, ui: &mut egui::Ui, gui: &mut Gui, cfg: &Config) {
