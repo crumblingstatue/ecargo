@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
   It can also be used to view changelogs.
 
+- The preferred theme is now saved so you don't have to set it every time you open ecargo.
+
 ### Changed
 
 - In the main view, the link containing the source folder location was removed in favor of a
