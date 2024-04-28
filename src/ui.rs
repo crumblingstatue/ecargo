@@ -407,10 +407,11 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                     );
                     if re.clicked() {
                         gui.secondary_pkg = Some(link.pkg_key);
+                        gui.show_sidebar = true;
                     }
                     if re.double_clicked() {
                         gui.primary_pkg = Some(link.pkg_key);
-                        gui.secondary_pkg = None;
+                        gui.show_sidebar = false;
                     }
                     ui.add(VersionBadge::new(&dpkg.cm_pkg.version, &gui.style));
                     ui.add(DepkindBadge::new(link.kind, &gui.style));
@@ -448,10 +449,11 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                             });
                             if re.clicked() {
                                 gui.secondary_pkg = Some(pkg.key);
+                                gui.show_sidebar = true;
                             }
                             if re.double_clicked() {
                                 gui.primary_pkg = Some(pkg.key);
-                                gui.secondary_pkg = None;
+                                gui.show_sidebar = false;
                             }
                             ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
                             additional_dep_info_ui(dep, ui);
