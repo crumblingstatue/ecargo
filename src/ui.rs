@@ -22,7 +22,7 @@ pub struct Gui {
     pub tab: Tab,
     pub right_panel_left: f32,
     pub pkg_list_filter: String,
-    pub readme: String,
+    pub markdown: String,
     pub cm_cache: CommonMarkCache,
 }
 
@@ -83,7 +83,7 @@ impl Gui {
             tab: Tab::default(),
             right_panel_left: egui_ctx.available_rect().width(),
             pkg_list_filter: String::new(),
-            readme: String::new(),
+            markdown: String::new(),
             cm_cache: CommonMarkCache::default(),
         }
     }
@@ -300,7 +300,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
         {
             match std::fs::read_to_string(pkg.manifest_dir.join("Cargo.toml.orig")) {
                 Ok(data) => {
-                    gui.readme = format!("```toml\n{data}\n```");
+                    gui.markdown = format!("```toml\n{data}\n```");
                     gui.tab = Tab::Markdown;
                 }
                 Err(e) => {
@@ -411,7 +411,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     if let Some(path) = &pkg.readme_path {
         ui.horizontal(|ui| {
             if ui.link("Readme").clicked() {
-                gui.readme = std::fs::read_to_string(path).unwrap();
+                gui.markdown = std::fs::read_to_string(path).unwrap();
                 gui.tab = Tab::Markdown;
             }
         });
@@ -419,7 +419,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     if let Some(path) = &pkg.changelog_path {
         ui.horizontal(|ui| {
             if ui.link("Changelog").clicked() {
-                gui.readme = std::fs::read_to_string(path).unwrap();
+                gui.markdown = std::fs::read_to_string(path).unwrap();
                 gui.tab = Tab::Markdown;
             }
         });
@@ -639,6 +639,6 @@ fn markdown_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
             // Hack to make things more legible
             ui.style_mut().visuals = egui::Visuals::light();
         }
-        CommonMarkViewer::new("readme_view").show(ui, &mut gui.cm_cache, &gui.readme);
+        CommonMarkViewer::new("readme_view").show(ui, &mut gui.cm_cache, &gui.markdown);
     });
 }
