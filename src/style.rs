@@ -8,6 +8,12 @@ pub const STYLE_LIST: &[(&str, StyleFn); 3] = &[
     ("egui light", egui_light),
 ];
 
+pub fn style_fun_by_name(name: &str) -> Option<StyleFn> {
+    STYLE_LIST
+        .iter()
+        .find_map(|(style_name, f)| (*style_name == name).then_some(*f))
+}
+
 #[derive(Clone)]
 pub struct Font {
     pub name: String,

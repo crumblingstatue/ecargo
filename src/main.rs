@@ -1,4 +1,5 @@
 mod app;
+mod config;
 mod project;
 mod style;
 mod ui;
@@ -16,7 +17,7 @@ fn main() {
             Box::new({
                 cc.egui_ctx
                     .send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(1280., 720.)));
-                let mut app = App::new(&cc.egui_ctx);
+                let mut app = App::new(&cc.egui_ctx).unwrap();
                 if let Some(arg) = std::env::args_os().nth(1) {
                     app.load_project(arg.as_ref());
                 } else {

@@ -1,6 +1,7 @@
 use {
     crate::{
         app::App,
+        config::Config,
         project::{dep_matches_pkg, Pkg, PkgKey, PkgSlotMap, Project},
         style::{Colors, Style},
     },
@@ -37,7 +38,7 @@ pub struct SettingsWindow {
 }
 
 impl SettingsWindow {
-    fn ui(&mut self, ctx: &egui::Context, style: &mut Style) {
+    fn ui(&mut self, ctx: &egui::Context, style: &mut Style, cfg: &mut Config) {
         egui::Window::new("Settings")
             .open(&mut self.open)
             .anchor(Align2::RIGHT_TOP, egui::vec2(0.0, 0.0))
@@ -51,6 +52,7 @@ impl SettingsWindow {
                             if ui.selectable_label(style.name == *name, *name).clicked() {
                                 *style = f();
                                 crate::style::apply_style(ctx, style.clone());
+                                cfg.style_name = name.to_string();
                             }
                         }
                     });
@@ -80,7 +82,7 @@ impl Gui {
 pub fn do_ui(app: &mut App, ctx: &egui::Context) {
     app.gui.modal.show_dialog();
     match &app.project {
-        Some(proj) => project_ui(proj, ctx, &mut app.gui),
+        Some(proj) => project_ui(proj, ctx, &mut app.gui, &mut app.config),
         None => {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.label("No project loaded");
@@ -89,7 +91,7 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
     }
 }
 
-pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
+pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
     egui::CentralPanel::default().show(ctx, |ui| match gui.focused_package {
         Some(id) => match gui.tab {
             Tab::ViewSingle => {
@@ -123,7 +125,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui) {
     } else {
         gui.right_panel_left = ctx.available_rect().width();
     }
-    gui.settings_window.ui(ctx, &mut gui.style);
+    gui.settings_window.ui(ctx, &mut gui.style, cfg);
 }
 
 struct DepkindBadge<'s> {
