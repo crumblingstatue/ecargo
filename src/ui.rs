@@ -29,7 +29,7 @@ pub enum Tab {
     #[default]
     ViewSingle,
     PackageList,
-    Readme,
+    Markdown,
 }
 
 #[derive(Default)]
@@ -109,7 +109,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &m
             Tab::PackageList => {
                 package_list_ui(project, ui, gui);
             }
-            Tab::Readme => readme_ui(ui, gui, project),
+            Tab::Markdown => markdown_ui(ui, gui, project),
         },
         None => {
             ui.heading(project.metadata.workspace_root.to_string());
@@ -222,7 +222,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
                     .unwrap_or("Single view"),
             ),
             (Tab::PackageList, "Packages"),
-            (Tab::Readme, "Readme"),
+            (Tab::Markdown, "Markdown"),
         ] {
             if ui
                 .selectable_label(
@@ -299,7 +299,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             match std::fs::read_to_string(pkg.manifest_dir.join("Cargo.toml.orig")) {
                 Ok(data) => {
                     gui.readme = format!("```toml\n{data}\n```");
-                    gui.tab = Tab::Readme;
+                    gui.tab = Tab::Markdown;
                 }
                 Err(e) => {
                     gui.modal
@@ -410,7 +410,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
         ui.horizontal(|ui| {
             if ui.link("Readme").clicked() {
                 gui.readme = std::fs::read_to_string(path).unwrap();
-                gui.tab = Tab::Readme;
+                gui.tab = Tab::Markdown;
             }
         });
     }
@@ -418,7 +418,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
         ui.horizontal(|ui| {
             if ui.link("Changelog").clicked() {
                 gui.readme = std::fs::read_to_string(path).unwrap();
-                gui.tab = Tab::Readme;
+                gui.tab = Tab::Markdown;
             }
         });
     }
@@ -629,7 +629,7 @@ fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
     });
 }
 
-fn readme_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
+fn markdown_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
     central_top_bar(ui, gui, project);
     egui::ScrollArea::vertical().show(ui, |ui| {
         if gui.style.name == "crates.io" {
