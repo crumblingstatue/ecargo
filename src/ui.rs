@@ -639,6 +639,6 @@ fn markdown_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
             // Hack to make things more legible
             ui.style_mut().visuals = egui::Visuals::light();
         }
-        CommonMarkViewer::new("readme_view").show(ui, &mut gui.cm_cache, &gui.markdown);
+        CommonMarkViewer::new("md_view").show(ui, &mut gui.cm_cache, &gui.markdown);
     });
 }
