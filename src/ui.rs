@@ -26,6 +26,7 @@ pub struct Gui {
     pub pkg_list_filter: String,
     pub markdown: String,
     pub cm_cache: CommonMarkCache,
+    pub show_sidebar: bool,
 }
 
 #[derive(Default, PartialEq)]
@@ -87,6 +88,7 @@ impl Gui {
             pkg_list_filter: String::new(),
             markdown: String::new(),
             cm_cache: CommonMarkCache::default(),
+            show_sidebar: true,
         }
     }
 }
@@ -119,17 +121,10 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &m
             ui.heading(project.metadata.workspace_root.to_string());
         }
     });
-    if let Some(key) = gui.secondary_pkg {
+    if let (Some(key), true) = (gui.secondary_pkg, gui.show_sidebar) {
         let re = egui::SidePanel::right("right_panel")
             .max_width(ctx.available_rect().width() / 2.5)
             .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.button("🗙").clicked() {
-                            gui.secondary_pkg = None;
-                        }
-                    });
-                });
                 let pkg = &project.packages[key];
                 pkg_info_ui(ui, pkg, &project.packages, gui, cfg);
             });
@@ -170,6 +165,14 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
             }
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+            let [icon, tooltip] = if gui.show_sidebar {
+                ["⏵", "Hide sidebar"]
+            } else {
+                ["⏴", "Show sidebar"]
+            };
+            if ui.button(icon).on_hover_text(tooltip).clicked() {
+                gui.show_sidebar ^= true;
+            }
             if ui.button(gui.style.icons.settings).clicked() {
                 gui.settings_window.open ^= true;
             }
