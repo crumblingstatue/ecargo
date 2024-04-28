@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - The preferred theme is now saved so you don't have to set it every time you open ecargo.
 
+- Open in terminal button. Opens the package's working directory in the terminal of your choice.
+
 ### Changed
 
 - In the main view, the link containing the source folder location was removed in favor of a

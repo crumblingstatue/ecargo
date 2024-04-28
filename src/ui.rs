@@ -56,6 +56,14 @@ impl SettingsWindow {
                             }
                         }
                     });
+                ui.horizontal(|ui| {
+                    ui.label("Terminal")
+                        .on_hover_text("The terminal to use for \"Open in terminal\" action");
+                    ui.add(
+                        egui::TextEdit::singleline(&mut cfg.terminal_app)
+                            .text_color(style.colors.text_edit_text),
+                    );
+                });
             });
     }
 }
@@ -96,7 +104,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &m
         Some(id) => match gui.tab {
             Tab::ViewSingle => {
                 let pkg = &project.packages[id];
-                package_ui(project, pkg, ui, gui);
+                package_ui(project, pkg, ui, gui, cfg);
             }
             Tab::PackageList => {
                 package_list_ui(project, ui, gui);
@@ -119,7 +127,7 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &m
                     });
                 });
                 let pkg = &project.packages[key];
-                pkg_info_ui(ui, pkg, &project.packages, gui);
+                pkg_info_ui(ui, pkg, &project.packages, gui, cfg);
             });
         gui.right_panel_left = re.response.rect.left();
     } else {
@@ -197,9 +205,9 @@ impl<'a> egui::Widget for VersionBadge<'a> {
     }
 }
 
-fn package_ui(project: &Project, pkg: &Pkg, ui: &mut egui::Ui, gui: &mut Gui) {
+fn package_ui(project: &Project, pkg: &Pkg, ui: &mut egui::Ui, gui: &mut Gui, cfg: &Config) {
     central_top_bar(ui, gui, project);
-    pkg_info_ui(ui, pkg, &project.packages, gui);
+    pkg_info_ui(ui, pkg, &project.packages, gui, cfg);
 }
 
 fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
@@ -269,7 +277,7 @@ fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
     }
 }
 
-fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gui) {
+fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gui, cfg: &Config) {
     ui.horizontal(|ui| {
         ui.label(
             egui::RichText::new(&pkg.cm_pkg.name)
@@ -289,6 +297,24 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             .clicked()
         {
             let _ = open::that(&pkg.manifest_dir);
+        }
+        if ui
+            .add_enabled(!cfg.terminal_app.is_empty(), egui::Button::new("🖳"))
+            .on_hover_text("Open in terminal")
+            .on_disabled_hover_text("No terminal configured")
+            .clicked()
+        {
+            let result = std::process::Command::new(&cfg.terminal_app)
+                .current_dir(&pkg.manifest_dir)
+                .spawn();
+            if let Err(e) = result {
+                gui.modal
+                    .dialog()
+                    .with_title("Error")
+                    .with_icon(egui_modal::Icon::Error)
+                    .with_body(format!("Error spawning terminal {e}"))
+                    .open();
+            }
         }
     });
     if let Some(desc) = &pkg.cm_pkg.description {

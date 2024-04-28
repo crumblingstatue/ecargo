@@ -3,12 +3,14 @@ use std::path::Path;
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Config {
     pub style_name: String,
+    pub terminal_app: String,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             style_name: "crates.io".into(),
+            terminal_app: String::new(),
         }
     }
 }
