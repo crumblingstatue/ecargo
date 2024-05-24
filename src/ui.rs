@@ -128,20 +128,20 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
 }
 
 pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
-    egui::CentralPanel::default().show(ctx, |ui| match gui.primary_pkg {
-        Some(id) => match gui.tab {
-            Tab::ViewSingle => {
+    egui::CentralPanel::default().show(ctx, |ui| match gui.tab {
+        Tab::ViewSingle => {
+            if let Some(id) = gui.primary_pkg {
                 let pkg = &project.packages[id];
                 package_ui(project, pkg, ui, gui, cfg);
+            } else {
+                central_top_bar(ui, gui, project);
+                ui.label("No primary package. Select one from the `Packages` tab.");
             }
-            Tab::PackageList => {
-                package_list_ui(project, ui, gui);
-            }
-            Tab::Markdown => markdown_ui(ui, gui, project),
-        },
-        None => {
-            ui.heading(project.metadata.workspace_root.to_string());
         }
+        Tab::PackageList => {
+            package_list_ui(project, ui, gui);
+        }
+        Tab::Markdown => markdown_ui(ui, gui, project),
     });
     if let (Some(key), true) = (gui.secondary_pkg, gui.show_sidebar) {
         let re = egui::SidePanel::right("right_panel")

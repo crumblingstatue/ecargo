@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - crates.io theme: Make selected text more legible (higher color contrast)
+- Allow packages to be explored even when there is no root package detected in a workspace.
 
 ## [0.1.0] - 2024-04-25
 Initial release

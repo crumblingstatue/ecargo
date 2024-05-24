@@ -1,7 +1,5 @@
 use {
-    cargo_metadata::{
-        camino::Utf8PathBuf, CargoOpt, DependencyKind, Metadata, MetadataCommand, Package,
-    },
+    cargo_metadata::{camino::Utf8PathBuf, CargoOpt, DependencyKind, MetadataCommand, Package},
     cargo_platform::Platform,
     slotmap::{new_key_type, SlotMap},
     std::{collections::HashMap, path::Path},
@@ -27,7 +25,6 @@ pub struct Pkg {
 pub type PkgSlotMap = SlotMap<PkgKey, Pkg>;
 
 pub struct Project {
-    pub metadata: Metadata,
     pub packages: PkgSlotMap,
     pub root: Option<PkgKey>,
 }
@@ -88,11 +85,7 @@ impl Project {
             }
             None => root = None,
         }
-        Ok(Project {
-            metadata,
-            packages,
-            root,
-        })
+        Ok(Project { packages, root })
     }
 }
 
