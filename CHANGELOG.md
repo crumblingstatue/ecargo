@@ -18,7 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `View Cargo.toml.orig` button. Allows you to view the original `Cargo.toml` file of a package.
 
-- `--no-default-features` and `--features` command line args to configure feature set to resolve.
+- `--no-default-features` and `--features` command line flags to configure feature set to resolve.
+
+- `--no-deps` flag to skip resolving dependencies.
 
 ### Changed
 

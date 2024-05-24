@@ -21,6 +21,9 @@ struct Args {
     features: Vec<String>,
     /// Use this manifest path instead of the current working directory
     manifest_path: Option<PathBuf>,
+    /// Don't resolve dependencies
+    #[arg(long)]
+    no_deps: bool,
 }
 
 fn main() {

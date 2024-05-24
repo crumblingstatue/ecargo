@@ -43,6 +43,9 @@ impl Project {
         if !args.features.is_empty() {
             cmd.features(CargoOpt::SomeFeatures(args.features.to_owned()));
         }
+        if args.no_deps {
+            cmd.no_deps();
+        }
         let metadata = cmd.exec()?;
         let mut packages = SlotMap::with_key();
         let mut pkgid_key_mappings = HashMap::new();
