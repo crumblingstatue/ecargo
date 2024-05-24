@@ -1,5 +1,7 @@
 use {
-    cargo_metadata::{camino::Utf8PathBuf, DependencyKind, Metadata, MetadataCommand, Package},
+    cargo_metadata::{
+        camino::Utf8PathBuf, CargoOpt, DependencyKind, Metadata, MetadataCommand, Package,
+    },
     cargo_platform::Platform,
     slotmap::{new_key_type, SlotMap},
     std::{collections::HashMap, path::Path},
@@ -35,10 +37,16 @@ new_key_type! {
 }
 
 impl Project {
-    pub fn load(path: &Path) -> anyhow::Result<Self> {
-        let metadata = MetadataCommand::new()
-            .manifest_path(path.join("Cargo.toml"))
-            .exec()?;
+    pub fn load(path: &Path, args: &crate::Args) -> anyhow::Result<Self> {
+        let mut cmd = MetadataCommand::new();
+        cmd.manifest_path(path.join("Cargo.toml"));
+        if args.no_default_features {
+            cmd.features(CargoOpt::NoDefaultFeatures);
+        }
+        if !args.features.is_empty() {
+            cmd.features(CargoOpt::SomeFeatures(args.features.to_owned()));
+        }
+        let metadata = cmd.exec()?;
         let mut packages = SlotMap::with_key();
         let mut pkgid_key_mappings = HashMap::new();
         for package in &metadata.packages {

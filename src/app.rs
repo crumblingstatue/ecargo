@@ -36,8 +36,8 @@ impl App {
         Ok(app)
     }
 
-    pub(crate) fn load_project(&mut self, path: &Path) {
-        match Project::load(path) {
+    pub(crate) fn load_project(&mut self, path: &Path, args: &crate::Args) {
+        match Project::load(path, args) {
             Ok(proj) => {
                 self.gui.primary_pkg = proj.root;
                 self.project = Some(proj);
