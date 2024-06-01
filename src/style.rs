@@ -164,5 +164,6 @@ pub fn apply_style(egui_ctx: &egui::Context, style: Style) {
         egui_style.visuals.selection.stroke.color = style.colors.selection_stroke;
         egui_style.visuals.extreme_bg_color = style.colors.extreme_bg;
         egui_style.visuals.widgets.active.fg_stroke.color = style.colors.widgets_active_fg_stroke;
+        egui_style.url_in_tooltip = true;
     });
 }
