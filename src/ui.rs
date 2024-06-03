@@ -66,9 +66,9 @@ impl SettingsWindow {
             .resizable(false)
             .collapsible(false)
             .show(ctx, |ui| {
-                egui::ComboBox::new("style_combo", "Style")
-                    .selected_text(style.name)
-                    .show_ui(ui, |ui| {
+                egui::ComboBox::new("style_combo", "Style").selected_text(style.name).show_ui(
+                    ui,
+                    |ui| {
                         for (name, f) in crate::style::STYLE_LIST {
                             if ui.selectable_label(style.name == *name, *name).clicked() {
                                 *style = f();
@@ -76,7 +76,8 @@ impl SettingsWindow {
                                 cfg.style_name = name.to_string();
                             }
                         }
-                    });
+                    },
+                );
                 ui.horizontal(|ui| {
                     ui.label("Terminal")
                         .on_hover_text("The terminal to use for \"Open in terminal\" action");
@@ -158,9 +159,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
         for (tab, tabname) in [
             (
                 Tab::ViewSingle,
-                active_pkg
-                    .map(|pkg| pkg.cm_pkg.name.as_str())
-                    .unwrap_or("Single view"),
+                active_pkg.map(|pkg| pkg.cm_pkg.name.as_str()).unwrap_or("Single view"),
             ),
             (Tab::PackageList, "Packages"),
             (Tab::Markdown, {
@@ -198,20 +197,13 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
             if ui.button(icon).on_hover_text(tooltip).clicked() {
                 gui.show_sidebar ^= true;
             }
-            if ui
-                .button(gui.style.icons.settings)
-                .on_hover_text("Settings")
-                .clicked()
-            {
+            if ui.button(gui.style.icons.settings).on_hover_text("Settings").clicked() {
                 gui.settings_window.open ^= true;
             }
             match project.root {
                 Some(root) => {
                     let pkg = &project.packages[root];
-                    if ui
-                        .link(format!("go to root ({})", pkg.cm_pkg.name))
-                        .clicked()
-                    {
+                    if ui.link(format!("go to root ({})", pkg.cm_pkg.name)).clicked() {
                         gui.primary_pkg = Some(pkg.key);
                         gui.tab = Tab::ViewSingle;
                     }
@@ -258,11 +250,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             gui.secondary_pkg = None;
             gui.tab = Tab::ViewSingle;
         }
-        if ui
-            .button("🖹")
-            .on_hover_text("View Cargo.toml.orig")
-            .clicked()
-        {
+        if ui.button("🖹").on_hover_text("View Cargo.toml.orig").clicked() {
             match std::fs::read_to_string(pkg.manifest_dir.join("Cargo.toml.orig")) {
                 Ok(data) => {
                     gui.md = MdContent::new(
@@ -341,12 +329,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             }
         });
     }
-    if pkg
-        .cm_pkg
-        .source
-        .as_ref()
-        .is_some_and(|src| src.is_crates_io())
-    {
+    if pkg.cm_pkg.source.as_ref().is_some_and(|src| src.is_crates_io()) {
         ui.horizontal(|ui| {
             ui.label("crates.io");
             ui.hyperlink(format!("https://crates.io/crates/{}", &pkg.cm_pkg.name));

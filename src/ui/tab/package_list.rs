@@ -24,11 +24,7 @@ pub(crate) fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gu
                     .description
                     .as_ref()
                     .is_some_and(|desc| desc.to_ascii_lowercase().contains(&gui.pkg_list_filter))
-                || pkg
-                    .cm_pkg
-                    .keywords
-                    .iter()
-                    .any(|kw| kw.contains(&gui.pkg_list_filter))
+                || pkg.cm_pkg.keywords.iter().any(|kw| kw.contains(&gui.pkg_list_filter))
         });
         ui.label(format!(
             "{}/{} packages",

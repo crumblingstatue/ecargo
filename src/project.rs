@@ -70,9 +70,7 @@ impl Project {
         if let Some(resolve) = metadata.resolve.as_ref() {
             for node in &resolve.nodes {
                 let pkg_key = pkgid_key_mappings[&node.id];
-                packages[pkg_key]
-                    .enabled_features
-                    .clone_from(&node.features);
+                packages[pkg_key].enabled_features.clone_from(&node.features);
             }
         }
         // Collect dependents
