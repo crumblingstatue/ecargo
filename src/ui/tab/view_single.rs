@@ -1,9 +1,10 @@
-use eframe::egui;
-
-use crate::{
-    config::Config,
-    project::{Pkg, Project},
-    ui::{central_top_bar, pkg_info_ui, Gui},
+use {
+    crate::{
+        config::Config,
+        project::{Pkg, Project},
+        ui::{central_top_bar, pkg_info_ui, Gui},
+    },
+    eframe::egui,
 };
 
 pub(crate) fn view_single_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project, cfg: &Config) {
