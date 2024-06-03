@@ -7,10 +7,12 @@ use {
         style::{Colors, Style},
     },
     eframe::egui::{self, Align2},
-    egui_commonmark::{CommonMarkCache, CommonMarkViewer},
+    egui_commonmark::CommonMarkCache,
     egui_modal::Modal,
+    tab::Tab,
 };
 
+mod tab;
 mod widgets;
 
 pub struct Gui {
@@ -49,14 +51,6 @@ enum MdContentKind {
     Readme,
     Changelog,
     CargoToml,
-}
-
-#[derive(Default, PartialEq)]
-pub enum Tab {
-    #[default]
-    ViewSingle,
-    PackageList,
-    Markdown,
 }
 
 #[derive(Default)]
@@ -129,19 +123,9 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
 
 pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
     egui::CentralPanel::default().show(ctx, |ui| match gui.tab {
-        Tab::ViewSingle => {
-            if let Some(id) = gui.primary_pkg {
-                let pkg = &project.packages[id];
-                package_ui(project, pkg, ui, gui, cfg);
-            } else {
-                central_top_bar(ui, gui, project);
-                ui.label("No primary package. Select one from the `Packages` tab.");
-            }
-        }
-        Tab::PackageList => {
-            package_list_ui(project, ui, gui);
-        }
-        Tab::Markdown => markdown_ui(ui, gui, project),
+        Tab::ViewSingle => tab::view_single_ui(ui, gui, project, cfg),
+        Tab::PackageList => tab::package_list_ui(project, ui, gui),
+        Tab::Markdown => tab::markdown_ui(ui, gui, project),
     });
     if let (Some(key), true) = (gui.secondary_pkg, gui.show_sidebar) {
         let re = egui::SidePanel::right("right_panel")
@@ -155,11 +139,6 @@ pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &m
         gui.right_panel_left = ctx.available_rect().width();
     }
     gui.settings_window.ui(ctx, &mut gui.style, cfg);
-}
-
-fn package_ui(project: &Project, pkg: &Pkg, ui: &mut egui::Ui, gui: &mut Gui, cfg: &Config) {
-    central_top_bar(ui, gui, project);
-    pkg_info_ui(ui, pkg, &project.packages, gui, cfg);
 }
 
 fn markdown_tab_label(kind: MdContentKind, pkgname: &str) -> String {
@@ -570,75 +549,4 @@ fn header_icon(ui: &mut egui::Ui, openness: f32, response: &egui::Response, colo
         colors.highlighted_text,
         egui::Stroke::NONE,
     ));
-}
-
-fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
-    central_top_bar(ui, gui, project);
-    let mut filtered: Vec<_> = project.packages.keys().collect();
-    ui.horizontal(|ui| {
-        ui.add(
-            egui::TextEdit::singleline(&mut gui.pkg_list_filter)
-                .text_color(gui.style.colors.text_edit_text)
-                .hint_text("Filter"),
-        );
-        filtered.retain(|key| {
-            let pkg = &project.packages[*key];
-            pkg.cm_pkg.name.contains(&gui.pkg_list_filter)
-                || pkg
-                    .cm_pkg
-                    .description
-                    .as_ref()
-                    .is_some_and(|desc| desc.to_ascii_lowercase().contains(&gui.pkg_list_filter))
-                || pkg
-                    .cm_pkg
-                    .keywords
-                    .iter()
-                    .any(|kw| kw.contains(&gui.pkg_list_filter))
-        });
-        ui.label(format!(
-            "{}/{} packages",
-            filtered.len(),
-            project.packages.len()
-        ));
-    });
-    ui.separator();
-    egui::ScrollArea::vertical().show(ui, |ui| {
-        egui::Grid::new("pkg_list_grid").show(ui, |ui| {
-            for key in filtered {
-                let pkg = &project.packages[key];
-                ui.scope(|ui| {
-                    let re = ui.selectable_label(
-                        gui.secondary_pkg == Some(key),
-                        egui::RichText::new(&pkg.cm_pkg.name)
-                            .color(gui.style.colors.highlighted_text),
-                    );
-                    if re.clicked() {
-                        gui.secondary_pkg = Some(key);
-                    }
-                    if re.double_clicked() {
-                        gui.primary_pkg = Some(key);
-                        gui.secondary_pkg = None;
-                        gui.tab = Tab::ViewSingle;
-                    }
-                    ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
-                });
-                if let Some(info) = &pkg.cm_pkg.description {
-                    ui.label(info);
-                }
-                ui.end_row();
-            }
-        });
-    });
-}
-
-fn markdown_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
-    central_top_bar(ui, gui, project);
-    egui::ScrollArea::vertical().show(ui, |ui| {
-        ui.set_max_width(gui.right_panel_left - 14.0);
-        if gui.style.name == "crates.io" {
-            // Hack to make things more legible
-            ui.style_mut().visuals = egui::Visuals::light();
-        }
-        CommonMarkViewer::new("md_view").show(ui, &mut gui.cm_cache, &gui.md.md);
-    });
 }
