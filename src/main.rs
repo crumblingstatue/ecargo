@@ -24,10 +24,17 @@ struct Args {
     /// Don't resolve dependencies
     #[arg(long)]
     no_deps: bool,
+    /// Show version information and exit
+    #[arg(long)]
+    version: bool,
 }
 
 fn main() {
     let args = Args::parse();
+    if args.version {
+        println!("ecargo version {}", env!("CARGO_PKG_VERSION"));
+        return;
+    }
     eframe::run_native(
         "ecargo",
         NativeOptions::default(),

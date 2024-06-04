@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - `--no-deps` flag to skip resolving dependencies.
 
+- `--version` command line flag
+
 ### Changed
 
 - In the main view, the link containing the source folder location was removed in favor of a
