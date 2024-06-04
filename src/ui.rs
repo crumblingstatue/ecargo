@@ -66,19 +66,21 @@ impl SettingsWindow {
             .resizable(false)
             .collapsible(false)
             .show(ctx, |ui| {
-                egui::ComboBox::new("style_combo", "Style").selected_text(style.name).show_ui(
-                    ui,
-                    |ui| {
-                        for (name, f) in crate::style::STYLE_LIST {
-                            if ui.selectable_label(style.name == *name, *name).clicked() {
-                                *style = f();
-                                crate::style::apply_style(ctx, style.clone());
-                                cfg.style_name = name.to_string();
+                egui::Grid::new("settings_grid").show(ui, |ui| {
+                    ui.label("Style");
+                    egui::ComboBox::new("style_combo", "").selected_text(style.name).show_ui(
+                        ui,
+                        |ui| {
+                            for (name, f) in crate::style::STYLE_LIST {
+                                if ui.selectable_label(style.name == *name, *name).clicked() {
+                                    *style = f();
+                                    crate::style::apply_style(ctx, style.clone());
+                                    cfg.style_name = name.to_string();
+                                }
                             }
-                        }
-                    },
-                );
-                ui.horizontal(|ui| {
+                        },
+                    );
+                    ui.end_row();
                     ui.label("Terminal")
                         .on_hover_text("The terminal to use for \"Open in terminal\" action");
                     ui.add(
