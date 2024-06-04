@@ -33,31 +33,38 @@ pub(crate) fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gu
         ));
     });
     ui.separator();
-    egui::ScrollArea::vertical().show(ui, |ui| {
-        egui::Grid::new("pkg_list_grid").show(ui, |ui| {
-            for key in filtered {
-                let pkg = &project.packages[key];
-                ui.scope(|ui| {
-                    let re = ui.selectable_label(
-                        gui.secondary_pkg == Some(key),
-                        egui::RichText::new(&pkg.cm_pkg.name)
-                            .color(gui.style.colors.highlighted_text),
-                    );
-                    if re.clicked() {
-                        gui.secondary_pkg = Some(key);
+    egui::ScrollArea::vertical().auto_shrink(false).show_rows(
+        ui,
+        22.0,
+        filtered.len(),
+        |ui, range| {
+            egui::Grid::new("pkg_list_grid").show(ui, |ui| {
+                for &key in &filtered[range] {
+                    let pkg = &project.packages[key];
+                    ui.scope(|ui| {
+                        let re = ui.selectable_label(
+                            gui.secondary_pkg == Some(key),
+                            egui::RichText::new(&pkg.cm_pkg.name)
+                                .color(gui.style.colors.highlighted_text),
+                        );
+                        if re.clicked() {
+                            gui.secondary_pkg = Some(key);
+                        }
+                        if re.double_clicked() {
+                            gui.primary_pkg = Some(key);
+                            gui.secondary_pkg = None;
+                            gui.tab = Tab::ViewSingle;
+                        }
+                        ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
+                    });
+                    if let Some(info) = &pkg.cm_pkg.description {
+                        if let Some(fst_line) = info.lines().next() {
+                            ui.label(fst_line);
+                        }
                     }
-                    if re.double_clicked() {
-                        gui.primary_pkg = Some(key);
-                        gui.secondary_pkg = None;
-                        gui.tab = Tab::ViewSingle;
-                    }
-                    ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
-                });
-                if let Some(info) = &pkg.cm_pkg.description {
-                    ui.label(info);
+                    ui.end_row();
                 }
-                ui.end_row();
-            }
-        });
-    });
+            });
+        },
+    );
 }
