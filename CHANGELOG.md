@@ -35,10 +35,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The close button on the sidebar's right side got replaced by a sidebar toggle button
   in the top panel's right side.
 
+- The package list now only shows the first line of a package description.
+  You can hover the description to get the full text, or click the package to open the
+  side bar with the detailed view.
+
 ### Fixed
 
 - crates.io theme: Make selected text more legible (higher color contrast)
 - Allow packages to be explored even when there is no root package detected in a workspace.
+- Very bad performance on package list tab, if there are a lot of packages.
+
+  Now only the visible packages are rendered, vastly improving performance.
 
 ## [0.1.0] - 2024-04-25
 Initial release
