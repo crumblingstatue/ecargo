@@ -3,7 +3,7 @@ use {
     anyhow::Context,
     directories::ProjectDirs,
     eframe::egui,
-    std::path::PathBuf,
+    std::{path::PathBuf, sync::mpsc},
 };
 
 pub struct App {
@@ -14,9 +14,23 @@ pub struct App {
     pub load: Option<LoadState>,
 }
 
+pub enum LoadStage {
+    MetadataQuery,
+    Finished(Project),
+    Error(anyhow::Error),
+    PkgInfoCollect,
+    Resolve,
+    GenDepGraph,
+}
+
+pub(crate) type LoadRecv = mpsc::Receiver<LoadStage>;
+pub(crate) type LoadSend = mpsc::Sender<LoadStage>;
+
 pub struct LoadState {
-    pub(crate) recv: std::sync::mpsc::Receiver<anyhow::Result<Project>>,
+    pub(crate) recv: LoadRecv,
     pub(crate) path: PathBuf,
+    /// User-facing load status message
+    pub(crate) msg: String,
 }
 
 impl App {
@@ -44,13 +58,16 @@ impl App {
     }
 
     pub(crate) fn load_project_async(&mut self, path: PathBuf, args: crate::Args) {
-        let (tx, rx) = std::sync::mpsc::channel();
+        let (tx, rx) = mpsc::channel();
         self.load = Some(LoadState {
             recv: rx,
             path: path.clone(),
+            msg: "Preparing...".into(),
         });
         std::thread::spawn(move || {
-            tx.send(Project::load(&path, &args)).unwrap();
+            if let Err(e) = Project::load(&path, &args, tx.clone()) {
+                tx.send(LoadStage::Error(e)).unwrap();
+            }
         });
     }
 }

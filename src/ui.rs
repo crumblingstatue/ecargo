@@ -1,7 +1,7 @@
 use {
     self::widgets::{badge, DepkindBadge, VersionBadge},
     crate::{
-        app::App,
+        app::{App, LoadStage},
         config::Config,
         project::{dep_matches_pkg, Pkg, PkgKey, PkgSlotMap, Project},
         style::{Colors, Style},
@@ -117,36 +117,49 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
     match &app.project {
         Some(proj) => project_ui(proj, ctx, &mut app.gui, &mut app.config),
         None => {
-            egui::CentralPanel::default().show(ctx, |ui| match &app.load {
-                Some(load) => match load.recv.try_recv() {
-                    Ok(result) => match result {
-                        Ok(proj) => {
-                            app.gui.primary_pkg = proj.root;
-                            app.project = Some(proj);
-                            ctx.request_repaint();
-                            app.load = None;
-                        }
-                        Err(e) => {
-                            app.gui
-                                .modal
-                                .dialog()
-                                .with_title("Error loading project")
-                                .with_icon(egui_modal::Icon::Error)
-                                .with_body(e)
-                                .open();
-                            app.load = None;
-                        }
-                    },
-                    Err(e) => match e {
-                        std::sync::mpsc::TryRecvError::Empty => {
-                            ui.label(format!("Loading project at \"{}\"...", load.path.display()));
-                            ui.spinner();
-                        }
-                        std::sync::mpsc::TryRecvError::Disconnected => {
-                            ui.label("Error loading: Channel disconnected.");
-                        }
-                    },
-                },
+            egui::CentralPanel::default().show(ctx, |ui| match &mut app.load {
+                Some(load) => {
+                    ui.label(format!("Loading project at \"{}\"...", load.path.display()));
+                    ui.label(&load.msg);
+                    match load.recv.try_recv() {
+                        Ok(stage) => match stage {
+                            LoadStage::Finished(proj) => {
+                                app.gui.primary_pkg = proj.root;
+                                app.project = Some(proj);
+                                app.load = None;
+                            }
+                            LoadStage::Error(err) => {
+                                app.gui
+                                    .modal
+                                    .dialog()
+                                    .with_title("Error loading project")
+                                    .with_icon(egui_modal::Icon::Error)
+                                    .with_body(err)
+                                    .open();
+                                app.load = None;
+                            }
+                            LoadStage::MetadataQuery => {
+                                load.msg = "Querying metadata...".into();
+                            }
+                            LoadStage::PkgInfoCollect => {
+                                load.msg = "Collecting package info...".into()
+                            }
+                            LoadStage::Resolve => load.msg = "Resolving dependencies...".into(),
+                            LoadStage::GenDepGraph => {
+                                load.msg = "Generating dependency graph...".into()
+                            }
+                        },
+                        Err(e) => match e {
+                            std::sync::mpsc::TryRecvError::Empty => {
+                                ui.spinner();
+                            }
+                            std::sync::mpsc::TryRecvError::Disconnected => {
+                                ui.label("Error loading: Channel disconnected.");
+                            }
+                        },
+                    }
+                    ctx.request_repaint();
+                }
                 None => {
                     ui.label("No project loaded");
                 }

@@ -1,4 +1,5 @@
 use {
+    crate::app::{LoadSend, LoadStage},
     cargo_metadata::{camino::Utf8PathBuf, CargoOpt, DependencyKind, MetadataCommand, Package},
     cargo_platform::Platform,
     slotmap::{new_key_type, SlotMap},
@@ -34,7 +35,7 @@ new_key_type! {
 }
 
 impl Project {
-    pub fn load(path: &Path, args: &crate::Args) -> anyhow::Result<Self> {
+    pub fn load(path: &Path, args: &crate::Args, sender: LoadSend) -> anyhow::Result<()> {
         let mut cmd = MetadataCommand::new();
         cmd.manifest_path(path.join("Cargo.toml"));
         if args.no_default_features {
@@ -46,7 +47,9 @@ impl Project {
         if args.no_deps {
             cmd.no_deps();
         }
+        sender.send(LoadStage::MetadataQuery)?;
         let metadata = cmd.exec()?;
+        sender.send(LoadStage::PkgInfoCollect)?;
         let mut packages = SlotMap::with_key();
         let mut pkgid_key_mappings = HashMap::new();
         for package in &metadata.packages {
@@ -67,6 +70,7 @@ impl Project {
                 }
             });
         }
+        sender.send(LoadStage::Resolve)?;
         if let Some(resolve) = metadata.resolve.as_ref() {
             for node in &resolve.nodes {
                 let pkg_key = pkgid_key_mappings[&node.id];
@@ -74,6 +78,7 @@ impl Project {
             }
         }
         // Collect dependents
+        sender.send(LoadStage::GenDepGraph)?;
         gen_dep_graph_info(&mut packages);
         let root;
         match metadata.root_package() {
@@ -86,7 +91,8 @@ impl Project {
             }
             None => root = None,
         }
-        Ok(Project { packages, root })
+        sender.send(LoadStage::Finished(Project { packages, root }))?;
+        Ok(())
     }
 }
 
