@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-- Nothing here yet
+### Changed
+
+- Projects are now loaded on a separate thread, and loading doesn't block the ui.
 
 ## [0.2.0] - 2024-06-04
 

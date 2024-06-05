@@ -45,10 +45,10 @@ fn main() {
                     .send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(1280., 720.)));
                 let mut app = App::new(&cc.egui_ctx).unwrap();
                 if let Some(path) = &args.manifest_path {
-                    app.load_project(path, &args);
+                    app.load_project_async(path.to_owned(), args);
                 } else {
                     match std::env::current_dir() {
-                        Ok(cwd) => app.load_project(&cwd, &args),
+                        Ok(cwd) => app.load_project_async(cwd, args),
                         Err(e) => eprintln!("Could not determine cwd: {e}"),
                     }
                 }

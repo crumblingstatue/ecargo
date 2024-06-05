@@ -3,7 +3,7 @@ use {
     anyhow::Context,
     directories::ProjectDirs,
     eframe::egui,
-    std::path::Path,
+    std::path::PathBuf,
 };
 
 pub struct App {
@@ -11,6 +11,12 @@ pub struct App {
     pub gui: Gui,
     pub dirs: ProjectDirs,
     pub config: Config,
+    pub load: Option<LoadState>,
+}
+
+pub struct LoadState {
+    pub(crate) recv: std::sync::mpsc::Receiver<anyhow::Result<Project>>,
+    pub(crate) path: PathBuf,
 }
 
 impl App {
@@ -24,6 +30,7 @@ impl App {
             gui: Gui::new(egui_ctx),
             dirs,
             config,
+            load: None,
         };
         match crate::style::style_fun_by_name(&style_name) {
             Some(fun) => {
@@ -36,22 +43,15 @@ impl App {
         Ok(app)
     }
 
-    pub(crate) fn load_project(&mut self, path: &Path, args: &crate::Args) {
-        match Project::load(path, args) {
-            Ok(proj) => {
-                self.gui.primary_pkg = proj.root;
-                self.project = Some(proj);
-            }
-            Err(e) => {
-                self.gui
-                    .modal
-                    .dialog()
-                    .with_title("Error loading project")
-                    .with_icon(egui_modal::Icon::Error)
-                    .with_body(e)
-                    .open();
-            }
-        }
+    pub(crate) fn load_project_async(&mut self, path: PathBuf, args: crate::Args) {
+        let (tx, rx) = std::sync::mpsc::channel();
+        self.load = Some(LoadState {
+            recv: rx,
+            path: path.clone(),
+        });
+        std::thread::spawn(move || {
+            tx.send(Project::load(&path, &args)).unwrap();
+        });
     }
 }
 

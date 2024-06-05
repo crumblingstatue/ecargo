@@ -117,8 +117,39 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
     match &app.project {
         Some(proj) => project_ui(proj, ctx, &mut app.gui, &mut app.config),
         None => {
-            egui::CentralPanel::default().show(ctx, |ui| {
-                ui.label("No project loaded");
+            egui::CentralPanel::default().show(ctx, |ui| match &app.load {
+                Some(load) => match load.recv.try_recv() {
+                    Ok(result) => match result {
+                        Ok(proj) => {
+                            app.gui.primary_pkg = proj.root;
+                            app.project = Some(proj);
+                            ctx.request_repaint();
+                            app.load = None;
+                        }
+                        Err(e) => {
+                            app.gui
+                                .modal
+                                .dialog()
+                                .with_title("Error loading project")
+                                .with_icon(egui_modal::Icon::Error)
+                                .with_body(e)
+                                .open();
+                            app.load = None;
+                        }
+                    },
+                    Err(e) => match e {
+                        std::sync::mpsc::TryRecvError::Empty => {
+                            ui.label(format!("Loading project at \"{}\"...", load.path.display()));
+                            ui.spinner();
+                        }
+                        std::sync::mpsc::TryRecvError::Disconnected => {
+                            ui.label("Error loading: Channel disconnected.");
+                        }
+                    },
+                },
+                None => {
+                    ui.label("No project loaded");
+                }
             });
         }
     }
