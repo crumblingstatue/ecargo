@@ -103,7 +103,9 @@ impl Gui {
             settings_window: SettingsWindow::default(),
             style,
             tab: Tab::default(),
-            right_panel_left: egui_ctx.available_rect().width(),
+            // Arbitrary value: Can't be 0., that causes a panic in egui.
+            // Also can't call `Context::available_width` at this point, also causes panic.
+            right_panel_left: 100.,
             pkg_list_filter: String::new(),
             md: MdContent::default(),
             cm_cache: CommonMarkCache::default(),

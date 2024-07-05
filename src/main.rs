@@ -39,7 +39,7 @@ fn main() {
         "ecargo",
         NativeOptions::default(),
         Box::new(move |cc| {
-            Box::new({
+            Ok(Box::new({
                 egui_extras::install_image_loaders(&cc.egui_ctx);
                 cc.egui_ctx
                     .send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(1280., 720.)));
@@ -53,7 +53,7 @@ fn main() {
                     }
                 }
                 app
-            })
+            }))
         }),
     )
     .unwrap();
