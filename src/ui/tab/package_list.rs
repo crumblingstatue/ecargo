@@ -1,13 +1,11 @@
-use {
-    super::Tab,
-    crate::{
-        project::Project,
-        ui::{central_top_bar, widgets::VersionBadge, Gui},
-    },
-    eframe::egui,
+use super::Tab;
+use crate::{
+    project::Project,
+    ui::{central_top_bar, widgets::VersionBadge, Gui},
 };
+use eframe::egui;
 
-pub(crate) fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
+pub fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gui) {
     central_top_bar(ui, gui, project);
     let mut filtered: Vec<_> = project.packages.keys().collect();
     ui.horizontal(|ui| {

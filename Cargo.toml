@@ -7,21 +7,38 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/crumblingstatue/ecargo"
 
 [dependencies]
-anyhow = "1.0.82"
+anyhow = "1.0.89"
 cargo_metadata = "0.18.1"
-eframe = "0.27.2"
-egui-modal = "0.3.6"
-egui_commonmark = "0.16.1"
+eframe = "0.28.1"
+egui-modal = "0.4.0"
+egui_commonmark = "0.17.0"
 slotmap = "1.0.7"
-cargo-platform = "0.1.5"
-open = "5.1.2"
+cargo-platform = "0.1.8"
+open = "5.3.0"
 directories = "5.0.1"
-toml = "0.8.12"
-serde = { version = "1.0.199", features = ["derive"] }
-egui_extras = { version = "0.27.2", features = ["file", "http", "svg"] }
-image = { version = "0.25.1", features = ["png"] }
-clap = { version = "4.5.4", features = ["derive"] }
+toml = "0.8.19"
+serde = { version = "1.0.210", features = ["derive"] }
+egui_extras = { version = "0.28.1", features = ["file", "http", "svg"] }
+image = { version = "0.25.2", features = ["png"] }
+clap = { version = "4.5.18", features = ["derive"] }
 
 [profile.release]
 panic = "abort"
 strip = true
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+nursery = { level = "deny", priority = 0 }
+pedantic = { level = "deny", priority = 1 }
+enum_glob_use = { level = "deny", priority = 2 }
+module_name_repetitions = { level = "allow", priority = 3 }
+cast_precision_loss = { level = "allow", priority = 4 }
+cast_possible_truncation = { level = "allow", priority = 5 }
+cast_sign_loss = { level = "allow", priority = 6 }
+out_of_bounds_indexing = { level = "allow", priority = 7 }
+perf = { level = "warn", priority = 8 }
+style = { level = "warn", priority = 9 }
+unwrap_used = { level = "deny", priority = 10 }
+struct_field_names = { level = "allow", priority = 11 }

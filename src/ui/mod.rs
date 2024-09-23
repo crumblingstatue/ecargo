@@ -1,17 +1,21 @@
+use style::{Colors, Style};
+
 use {
-    self::widgets::{badge, DepkindBadge, VersionBadge},
     crate::{
         app::{App, LoadStage},
         config::Config,
         project::{dep_matches_pkg, Pkg, PkgKey, PkgSlotMap, Project},
-        style::{Colors, Style},
     },
-    eframe::egui::{self, Align2},
+    eframe::egui::{self, Align2, CollapsingHeader, Response, RichText, Ui},
     egui_commonmark::CommonMarkCache,
     egui_modal::Modal,
     tab::Tab,
+    widgets::{badge, DepkindBadge, VersionBadge},
 };
 
+use crate::ui::tab::{markdown, package_list, view_single};
+
+pub mod style;
 mod tab;
 mod widgets;
 
@@ -40,7 +44,7 @@ struct MdContent {
 }
 
 impl MdContent {
-    fn new(md: String, kind: MdContentKind, key: PkgKey) -> Self {
+    const fn new(md: String, kind: MdContentKind, key: PkgKey) -> Self {
         Self { md, kind, key }
     }
 }
@@ -71,11 +75,11 @@ impl SettingsWindow {
                     egui::ComboBox::new("style_combo", "").selected_text(style.name).show_ui(
                         ui,
                         |ui| {
-                            for (name, f) in crate::style::STYLE_LIST {
+                            for (name, f) in style::STYLE_LIST {
                                 if ui.selectable_label(style.name == *name, *name).clicked() {
                                     *style = f();
-                                    crate::style::apply_style(ctx, style.clone());
-                                    cfg.style_name = name.to_string();
+                                    style::apply_style(ctx, style.clone());
+                                    cfg.style_name = (*name).to_string();
                                 }
                             }
                         },
@@ -94,8 +98,8 @@ impl SettingsWindow {
 
 impl Gui {
     pub fn new(egui_ctx: &egui::Context) -> Self {
-        let style = crate::style::crates_io();
-        crate::style::apply_style(egui_ctx, style.clone());
+        let style = style::crates_io();
+        style::apply_style(egui_ctx, style.clone());
         Self {
             modal: Modal::new(egui_ctx, "modal_dialog"),
             secondary_pkg: None,
@@ -103,7 +107,7 @@ impl Gui {
             settings_window: SettingsWindow::default(),
             style,
             tab: Tab::default(),
-            right_panel_left: egui_ctx.available_rect().width(),
+            right_panel_left: 200.0, //egui_ctx.available_rect().width(), //TODO: panicking in new egui version
             pkg_list_filter: String::new(),
             md: MdContent::default(),
             cm_cache: CommonMarkCache::default(),
@@ -142,11 +146,11 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
                                 load.msg = "Querying metadata...".into();
                             }
                             LoadStage::PkgInfoCollect => {
-                                load.msg = "Collecting package info...".into()
+                                load.msg = "Collecting package info...".into();
                             }
                             LoadStage::Resolve => load.msg = "Resolving dependencies...".into(),
                             LoadStage::GenDepGraph => {
-                                load.msg = "Generating dependency graph...".into()
+                                load.msg = "Generating dependency graph...".into();
                             }
                         },
                         Err(e) => match e {
@@ -170,9 +174,9 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
 
 pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
     egui::CentralPanel::default().show(ctx, |ui| match gui.tab {
-        Tab::ViewSingle => tab::view_single_ui(ui, gui, project, cfg),
-        Tab::PackageList => tab::package_list_ui(project, ui, gui),
-        Tab::Markdown => tab::markdown_ui(ui, gui, project),
+        Tab::ViewSingle => view_single::view_single_ui(ui, gui, project, cfg),
+        Tab::PackageList => package_list::package_list_ui(project, ui, gui),
+        Tab::Markdown => markdown::markdown_ui(ui, gui, project),
     });
     if let (Some(key), true) = (gui.secondary_pkg, gui.show_sidebar) {
         let re = egui::SidePanel::right("right_panel")
@@ -205,7 +209,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
         for (tab, tabname) in [
             (
                 Tab::ViewSingle,
-                active_pkg.map(|pkg| pkg.cm_pkg.name.as_str()).unwrap_or("Single view"),
+                active_pkg.map_or("Single view", |pkg| pkg.cm_pkg.name.as_str()),
             ),
             (Tab::PackageList, "Packages"),
             (Tab::Markdown, {
@@ -217,8 +221,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
                         project
                             .packages
                             .get(gui.md.key)
-                            .map(|pkg| pkg.cm_pkg.name.as_str())
-                            .unwrap_or("Unknown"),
+                            .map_or("Unknown", |pkg| pkg.cm_pkg.name.as_str()),
                     );
                     &tab_str_buf
                 }
@@ -282,6 +285,7 @@ fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
     }
 }
 
+#[allow(clippy::too_many_lines)] // TODO: refactor to reduce complexity
 fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gui, cfg: &Config) {
     ui.horizontal(|ui| {
         ui.label(
@@ -367,6 +371,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
         });
     }
     if pkg.cm_pkg.authors.len() == 1 {
+        #[allow(clippy::unwrap_used)] // authors is not empty
         ui.label(format!("Author: {}", pkg.cm_pkg.authors.first().unwrap()));
     } else if !pkg.cm_pkg.authors.is_empty() {
         cheader("Authors", &gui.style).show(ui, |ui| {
@@ -375,7 +380,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
             }
         });
     }
-    if pkg.cm_pkg.source.as_ref().is_some_and(|src| src.is_crates_io()) {
+    if pkg.cm_pkg.source.as_ref().is_some_and(cargo_metadata::Source::is_crates_io) {
         ui.horizontal(|ui| {
             ui.label("crates.io");
             ui.hyperlink(format!("https://crates.io/crates/{}", &pkg.cm_pkg.name));
@@ -408,6 +413,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     }
     if let Some(path) = &pkg.readme_path {
         ui.horizontal(|ui| {
+            #[allow(clippy::unwrap_used)] // readme_path is Some
             if ui.link("Readme").clicked() {
                 gui.md = MdContent::new(
                     std::fs::read_to_string(path).unwrap(),
@@ -420,6 +426,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     }
     if let Some(path) = &pkg.changelog_path {
         ui.horizontal(|ui| {
+            #[allow(clippy::unwrap_used)] // changelog_path is Some
             if ui.link("Changelog").clicked() {
                 gui.md = MdContent::new(
                     std::fs::read_to_string(path).unwrap(),
@@ -443,6 +450,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
     });
 }
 
+#[allow(clippy::too_many_lines)] // TODO: refactor to reduce complexity
 fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, packages: &PkgSlotMap) {
     if !pkg.cm_pkg.features.is_empty() {
         cheader("Features", &gui.style).show(ui, |ui| {
@@ -495,7 +503,7 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
     if !pkg.dependencies.is_empty() {
         cheader("Dependencies", &gui.style).show(ui, |ui| {
             egui::Grid::new("deps_grid").striped(true).show(ui, |ui| {
-                for dep in pkg.cm_pkg.dependencies.iter() {
+                for dep in &pkg.cm_pkg.dependencies {
                     ui.add(DepkindBadge::new(dep.kind, &gui.style));
                     if let Some(pkg) = packages.values().find(|pkg| dep_matches_pkg(dep, pkg)) {
                         ui.scope(|ui| {
@@ -531,7 +539,6 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                         if let Some(info) = &pkg.cm_pkg.description {
                             ui.label(info);
                         }
-                        ui.end_row();
                     } else {
                         ui.scope(|ui| {
                             ui.label(format!("{} {}", dep.name, dep.req));
@@ -539,22 +546,23 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                         });
                         ui.label(egui::RichText::new("Unresolved").italics())
                             .on_hover_text("Couldn't find a package for this dependency.");
-                        ui.end_row();
                     }
+                    ui.end_row();
                 }
             });
         });
     }
 }
 
-fn cheader(label: &str, style: &crate::style::Style) -> egui::CollapsingHeader {
+fn cheader(label: &str, style: &Style) -> CollapsingHeader {
     let colors = style.colors;
-    egui::CollapsingHeader::new(egui::RichText::new(label).color(style.colors.highlighted_text))
+    CollapsingHeader::new(RichText::new(label).color(style.colors.highlighted_text))
         .icon(move |ui, openness, re| header_icon(ui, openness, re, colors))
 }
 
 // Stolen code from egui, because I need to specify the right color for the icon
-fn header_icon(ui: &mut egui::Ui, openness: f32, response: &egui::Response, colors: Colors) {
+fn header_icon(ui: &Ui, openness: f32, response: &Response, colors: Colors) {
+    use std::f32::consts::TAU;
     let visuals = ui.style().interact(response);
 
     let rect = response.rect;
@@ -566,7 +574,6 @@ fn header_icon(ui: &mut egui::Ui, openness: f32, response: &egui::Response, colo
     );
     let rect = rect.expand(visuals.expansion);
     let mut points = vec![rect.left_top(), rect.right_top(), rect.center_bottom()];
-    use std::f32::consts::TAU;
     let rotation =
         egui::emath::Rot2::from_angle(egui::remap(openness, 0.0..=1.0, -TAU / 4.0..=0.0));
     for p in &mut points {

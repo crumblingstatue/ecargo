@@ -7,7 +7,7 @@ use {
     egui_commonmark::CommonMarkViewer,
 };
 
-pub(crate) fn markdown_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
+pub fn markdown_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
     central_top_bar(ui, gui, project);
     egui::ScrollArea::vertical().show(ui, |ui| {
         ui.set_max_width(gui.right_panel_left - 14.0);

@@ -1,5 +1,6 @@
 use {
     crate::app::{LoadSend, LoadStage},
+    anyhow::Context,
     cargo_metadata::{camino::Utf8PathBuf, CargoOpt, DependencyKind, MetadataCommand, Package},
     cargo_platform::Platform,
     slotmap::{new_key_type, SlotMap},
@@ -35,14 +36,14 @@ new_key_type! {
 }
 
 impl Project {
-    pub fn load(path: &Path, args: &crate::Args, sender: LoadSend) -> anyhow::Result<()> {
+    pub fn load(path: &Path, args: &crate::Args, sender: &LoadSend) -> anyhow::Result<()> {
         let mut cmd = MetadataCommand::new();
         cmd.manifest_path(path.join("Cargo.toml"));
         if args.no_default_features {
             cmd.features(CargoOpt::NoDefaultFeatures);
         }
         if !args.features.is_empty() {
-            cmd.features(CargoOpt::SomeFeatures(args.features.to_owned()));
+            cmd.features(CargoOpt::SomeFeatures(args.features.clone()));
         }
         if args.no_deps {
             cmd.no_deps();
@@ -53,11 +54,11 @@ impl Project {
         let mut packages = SlotMap::with_key();
         let mut pkgid_key_mappings = HashMap::new();
         for package in &metadata.packages {
+            let manifest_dir = package.manifest_path.parent().context("context")?.to_owned();
+            let readme_path = manifest_dir.join("README.md");
+            let changelog_path = manifest_dir.join("CHANGELOG.md");
             packages.insert_with_key(|key| {
                 pkgid_key_mappings.insert(package.id.clone(), key);
-                let manifest_dir = package.manifest_path.parent().unwrap().to_owned();
-                let readme_path = manifest_dir.join("README.md");
-                let changelog_path = manifest_dir.join("CHANGELOG.md");
                 Pkg {
                     cm_pkg: package.clone(),
                     key,
@@ -91,7 +92,7 @@ impl Project {
             }
             None => root = None,
         }
-        sender.send(LoadStage::Finished(Project { packages, root }))?;
+        sender.send(LoadStage::Finished(Self { packages, root }))?;
         Ok(())
     }
 }
@@ -102,6 +103,7 @@ pub fn dep_matches_pkg(dep: &cargo_metadata::Dependency, pkg: &Pkg) -> bool {
 
 // When I made this I didn't realize `cargo_metadata` supplied this information through `resolve`,
 // but I don't feel like rewriting it right now.
+#[allow(clippy::unwrap_used)] // TODO: refactor to not use unwrap
 fn gen_dep_graph_info(pkgs: &mut PkgSlotMap) {
     let keys: Vec<PkgKey> = pkgs.keys().collect();
     for a in &keys {

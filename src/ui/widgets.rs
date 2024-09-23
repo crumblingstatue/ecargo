@@ -1,5 +1,5 @@
 use {
-    crate::style::Style,
+    super::style::Style,
     cargo_metadata::{semver::Version, DependencyKind},
     eframe::egui,
 };
@@ -38,7 +38,7 @@ impl<'s> egui::Widget for DepkindBadge<'s> {
 }
 
 impl<'a> DepkindBadge<'a> {
-    pub fn new(kind: DependencyKind, style: &'a crate::style::Style) -> Self {
+    pub const fn new(kind: DependencyKind, style: &'a Style) -> Self {
         Self { kind, style }
     }
 }
@@ -65,7 +65,7 @@ pub struct VersionBadge<'a> {
 }
 
 impl<'a> VersionBadge<'a> {
-    pub fn new(ver: &'a Version, style: &crate::style::Style) -> Self {
+    pub const fn new(ver: &'a Version, style: &Style) -> Self {
         Self {
             ver,
             bg_color: style.colors.inactive_weak_bg_fill,

@@ -1,13 +1,16 @@
 mod app;
 mod config;
 mod project;
-mod style;
 mod ui;
 
 use {
+    anyhow::Context,
     app::App,
     clap::Parser,
-    eframe::{egui, NativeOptions},
+    eframe::{
+        egui::{self, ViewportBuilder},
+        NativeOptions,
+    },
     std::path::PathBuf,
 };
 
@@ -29,21 +32,25 @@ struct Args {
     version: bool,
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     if args.version {
         println!("ecargo version {}", env!("CARGO_PKG_VERSION"));
-        return;
+        return Ok(());
     }
+    let viewport = ViewportBuilder::default()
+        .with_title("Trayracer")
+        .with_inner_size(egui::vec2(1280.0, 720.0));
+
     eframe::run_native(
         "ecargo",
-        NativeOptions::default(),
+        NativeOptions {
+            viewport,
+            ..Default::default()
+        },
         Box::new(move |cc| {
-            Box::new({
-                egui_extras::install_image_loaders(&cc.egui_ctx);
-                cc.egui_ctx
-                    .send_viewport_cmd(egui::ViewportCommand::InnerSize(egui::vec2(1280., 720.)));
-                let mut app = App::new(&cc.egui_ctx).unwrap();
+            Ok(Box::new({
+                let mut app = App::new(&cc.egui_ctx)?;
                 if let Some(path) = &args.manifest_path {
                     app.load_project_async(path.to_owned(), args);
                 } else {
@@ -53,8 +60,9 @@ fn main() {
                     }
                 }
                 app
-            })
+            }))
         }),
     )
-    .unwrap();
+    .map_err(|e| anyhow::anyhow!(e.to_string()))
+    .context("Failed to run native")
 }

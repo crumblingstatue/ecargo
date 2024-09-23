@@ -1,5 +1,5 @@
 use {
-    crate::{config::Config, project::Project, ui::Gui},
+    crate::{config::Config, project::Project, ui::style, ui::Gui},
     anyhow::Context,
     directories::ProjectDirs,
     eframe::egui,
@@ -23,8 +23,8 @@ pub enum LoadStage {
     GenDepGraph,
 }
 
-pub(crate) type LoadRecv = mpsc::Receiver<LoadStage>;
-pub(crate) type LoadSend = mpsc::Sender<LoadStage>;
+pub type LoadRecv = mpsc::Receiver<LoadStage>;
+pub type LoadSend = mpsc::Sender<LoadStage>;
 
 pub struct LoadState {
     pub(crate) recv: LoadRecv,
@@ -35,24 +35,25 @@ pub struct LoadState {
 
 impl App {
     pub fn new(egui_ctx: &egui::Context) -> anyhow::Result<Self> {
+        egui_extras::install_image_loaders(egui_ctx);
         let dirs = ProjectDirs::from("", "crumblingstatue", "ecargo")
             .context("Could not determine project dirs")?;
         let config = Config::load_or_default(dirs.config_dir());
         let style_name = config.style_name.clone();
-        let mut app = App {
+        let mut app = Self {
             project: None,
             gui: Gui::new(egui_ctx),
             dirs,
             config,
             load: None,
         };
-        match crate::style::style_fun_by_name(&style_name) {
+        match style::style_fun_by_name(&style_name) {
             Some(fun) => {
                 let style = fun();
-                crate::style::apply_style(egui_ctx, style.clone());
+                style::apply_style(egui_ctx, style.clone());
                 app.gui.style = style;
             }
-            None => eprintln!("No such style: {}", style_name),
+            None => eprintln!("No such style: {style_name}"),
         }
         Ok(app)
     }
@@ -65,8 +66,8 @@ impl App {
             msg: "Preparing...".into(),
         });
         std::thread::spawn(move || {
-            if let Err(e) = Project::load(&path, &args, tx.clone()) {
-                tx.send(LoadStage::Error(e)).unwrap();
+            if let Err(e) = Project::load(&path, &args, &tx) {
+                tx.send(LoadStage::Error(e)).expect("Could not load project");
             }
         });
     }

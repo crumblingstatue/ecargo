@@ -1,4 +1,4 @@
-use eframe::egui::{self, Color32, FontData, FontDefinitions};
+use eframe::egui::{self, Color32, FontData, FontDefinitions, Visuals};
 
 type StyleFn = fn() -> Style;
 
@@ -57,7 +57,8 @@ pub struct Icons {
 pub const DEBUG_COLOR: Color32 = Color32::from_rgb(255, 0, 255);
 
 pub fn crates_io() -> Style {
-    let font_data = egui::FontData::from_static(include_bytes!("../assets/FiraSans-Regular.ttf"));
+    let font_data =
+        egui::FontData::from_static(include_bytes!("../../assets/FiraSans-Regular.ttf"));
     let font = Font {
         name: "firasans".into(),
         data: font_data,
@@ -88,18 +89,14 @@ pub fn crates_io() -> Style {
 }
 
 pub fn egui_dark() -> Style {
-    vanilla_egui(egui::Visuals::dark(), STYLE_LIST[1].0, Color32::WHITE)
+    vanilla_egui(&Visuals::dark(), STYLE_LIST[1].0, Color32::WHITE)
 }
 
 pub fn egui_light() -> Style {
-    vanilla_egui(egui::Visuals::light(), STYLE_LIST[2].0, Color32::BROWN)
+    vanilla_egui(&Visuals::light(), STYLE_LIST[2].0, Color32::BROWN)
 }
 
-pub fn vanilla_egui(
-    visuals: egui::Visuals,
-    name: &'static str,
-    highlighted_text: Color32,
-) -> Style {
+pub fn vanilla_egui(visuals: &Visuals, name: &'static str, highlighted_text: Color32) -> Style {
     Style {
         name,
         font: None,
@@ -135,9 +132,21 @@ pub fn apply_style(egui_ctx: &egui::Context, style: Style) {
     }
     egui_ctx.set_fonts(font_defs);
     egui_ctx.style_mut(|egui_style| {
-        egui_style.text_styles.get_mut(&egui::TextStyle::Heading).unwrap().size = 24.0;
-        egui_style.text_styles.get_mut(&egui::TextStyle::Body).unwrap().size = 16.0;
-        egui_style.text_styles.get_mut(&egui::TextStyle::Button).unwrap().size = 16.0;
+        egui_style
+            .text_styles
+            .get_mut(&egui::TextStyle::Heading)
+            .expect("Could not get Heading from egui")
+            .size = 24.0;
+        egui_style
+            .text_styles
+            .get_mut(&egui::TextStyle::Body)
+            .expect("Could not get Body frome egui")
+            .size = 16.0;
+        egui_style
+            .text_styles
+            .get_mut(&egui::TextStyle::Button)
+            .expect("Could not get Button from egui")
+            .size = 16.0;
         egui_style.visuals.panel_fill = style.colors.panel_fill;
         egui_style.visuals.widgets.noninteractive.fg_stroke.color = style.colors.noninteractive_fg;
         egui_style.visuals.selection.bg_fill = style.colors.selected_bg_fill;

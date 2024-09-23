@@ -7,7 +7,7 @@ use {
     eframe::egui,
 };
 
-pub(crate) fn view_single_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project, cfg: &Config) {
+pub fn view_single_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &Project, cfg: &Config) {
     if let Some(id) = gui.primary_pkg {
         let pkg = &project.packages[id];
         package_ui(project, pkg, ui, gui, cfg);
