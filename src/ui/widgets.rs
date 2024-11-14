@@ -9,7 +9,7 @@ pub struct DepkindBadge<'s> {
     style: &'s Style,
 }
 
-impl<'s> egui::Widget for DepkindBadge<'s> {
+impl egui::Widget for DepkindBadge<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let (text, bg_color, text_color) = match self.kind {
             DependencyKind::Normal => (
@@ -74,7 +74,7 @@ impl<'a> VersionBadge<'a> {
     }
 }
 
-impl<'a> egui::Widget for VersionBadge<'a> {
+impl egui::Widget for VersionBadge<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         badge(ui, &self.ver.to_string(), self.bg_color, self.text_color)
     }
