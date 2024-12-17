@@ -8,7 +8,7 @@ use {
     },
     eframe::egui::{self, Align2},
     egui_commonmark::CommonMarkCache,
-    egui_modal::Modal,
+    std::fmt::Display,
     tab::Tab,
 };
 
@@ -16,7 +16,7 @@ mod tab;
 mod widgets;
 
 pub struct Gui {
-    pub modal: Modal,
+    modal_payload: Option<ModalPayload>,
     /// Primarily viewed package (i.e. main view)
     pub primary_pkg: Option<PkgKey>,
     /// Secondarily viewer package (i.e. sidebar)
@@ -92,12 +92,17 @@ impl SettingsWindow {
     }
 }
 
+struct ModalPayload {
+    title: String,
+    msg: String,
+}
+
 impl Gui {
     pub fn new(egui_ctx: &egui::Context) -> Self {
         let style = crate::style::crates_io();
         crate::style::apply_style(egui_ctx, style.clone());
         Self {
-            modal: Modal::new(egui_ctx, "modal_dialog"),
+            modal_payload: None,
             secondary_pkg: None,
             primary_pkg: None,
             settings_window: SettingsWindow::default(),
@@ -112,10 +117,41 @@ impl Gui {
             show_sidebar: true,
         }
     }
+    fn set_modal(&mut self, title: impl Display, msg: impl Display) {
+        self.modal_payload = Some(ModalPayload {
+            title: title.to_string(),
+            msg: msg.to_string(),
+        });
+    }
 }
 
 pub fn do_ui(app: &mut App, ctx: &egui::Context) {
-    app.gui.modal.show_dialog();
+    if let Some(payload) = &app.gui.modal_payload {
+        let mut close = false;
+        egui::Modal::new("modal_popup".into()).show(ctx, |ui| {
+            let (enter, esc) = ui.input(|inp| {
+                (
+                    inp.key_pressed(egui::Key::Enter),
+                    inp.key_pressed(egui::Key::Escape),
+                )
+            });
+            ui.horizontal(|ui| {
+                ui.label(egui::RichText::new("❗").size(64.0).color(egui::Color32::RED));
+                ui.vertical_centered(|ui| {
+                    ui.heading(&payload.title);
+                    ui.separator();
+                    ui.label(&payload.msg);
+                    ui.separator();
+                    if ui.button("Ok").clicked() || enter || esc {
+                        close = true;
+                    }
+                });
+            });
+        });
+        if close {
+            app.gui.modal_payload = None;
+        }
+    }
     match &app.project {
         Some(proj) => project_ui(proj, ctx, &mut app.gui, &mut app.config),
         None => {
@@ -131,13 +167,7 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
                                 app.load = None;
                             }
                             LoadStage::Error(err) => {
-                                app.gui
-                                    .modal
-                                    .dialog()
-                                    .with_title("Error loading project")
-                                    .with_icon(egui_modal::Icon::Error)
-                                    .with_body(err)
-                                    .open();
+                                app.gui.set_modal("Error loading project", err);
                                 app.load = None;
                             }
                             LoadStage::MetadataQuery => {
@@ -309,12 +339,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
                     gui.tab = Tab::Markdown;
                 }
                 Err(e) => {
-                    gui.modal
-                        .dialog()
-                        .with_title("Error")
-                        .with_icon(egui_modal::Icon::Error)
-                        .with_body(format!("Could not open Cargo.toml.orig: {e}"))
-                        .open();
+                    gui.set_modal("Error", format!("Could not open Cargo.toml.orig: {e}"));
                 }
             }
         }
@@ -335,12 +360,7 @@ fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gu
                 .current_dir(&pkg.manifest_dir)
                 .spawn();
             if let Err(e) = result {
-                gui.modal
-                    .dialog()
-                    .with_title("Error")
-                    .with_icon(egui_modal::Icon::Error)
-                    .with_body(format!("Error spawning terminal {e}"))
-                    .open();
+                gui.set_modal("Error", format!("Error spawning terminal {e}"));
             }
         }
     });

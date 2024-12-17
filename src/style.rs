@@ -1,4 +1,7 @@
-use eframe::egui::{self, Color32, FontData, FontDefinitions};
+use {
+    eframe::egui::{self, Color32, FontData, FontDefinitions},
+    std::sync::Arc,
+};
 
 type StyleFn = fn() -> Style;
 
@@ -128,7 +131,7 @@ pub fn vanilla_egui(
 pub fn apply_style(egui_ctx: &egui::Context, style: Style) {
     let mut font_defs = FontDefinitions::default();
     if let Some(font) = style.font {
-        font_defs.font_data.insert(font.name.clone(), font.data);
+        font_defs.font_data.insert(font.name.clone(), Arc::new(font.data));
         if let Some(fam) = font_defs.families.get_mut(&egui::FontFamily::Proportional) {
             fam.insert(0, font.name);
         }
