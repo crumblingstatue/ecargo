@@ -2,7 +2,7 @@ use {
     super::Tab,
     crate::{
         project::Project,
-        ui::{central_top_bar, widgets::VersionBadge, Gui},
+        ui::{central_top_bar, widgets::VersionBadge, Gui, PkgFilter},
     },
     eframe::egui,
 };
@@ -11,20 +11,22 @@ pub(crate) fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gu
     central_top_bar(ui, gui, project);
     let mut filtered: Vec<_> = project.packages.keys().collect();
     ui.horizontal(|ui| {
-        ui.add(
-            egui::TextEdit::singleline(&mut gui.pkg_list_filter)
-                .text_color(gui.style.colors.text_edit_text)
-                .hint_text("Filter"),
-        );
+        if ui
+            .add(
+                egui::TextEdit::singleline(&mut gui.pkg_list_filter_string)
+                    .text_color(gui.style.colors.text_edit_text)
+                    .hint_text("Filter"),
+            )
+            .changed()
+        {
+            gui.pkg_list_compiled_filter = Some(PkgFilter::from_str(&gui.pkg_list_filter_string));
+        }
         filtered.retain(|key| {
             let pkg = &project.packages[*key];
-            pkg.cm_pkg.name.contains(&gui.pkg_list_filter)
-                || pkg
-                    .cm_pkg
-                    .description
-                    .as_ref()
-                    .is_some_and(|desc| desc.to_ascii_lowercase().contains(&gui.pkg_list_filter))
-                || pkg.cm_pkg.keywords.iter().any(|kw| kw.contains(&gui.pkg_list_filter))
+            match &gui.pkg_list_compiled_filter {
+                Some(filt) => filt.matches(pkg),
+                None => true,
+            }
         });
         ui.label(format!(
             "{}/{} packages",

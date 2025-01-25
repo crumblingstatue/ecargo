@@ -25,10 +25,43 @@ pub struct Gui {
     pub style: Style,
     pub tab: Tab,
     pub right_panel_left: f32,
-    pub pkg_list_filter: String,
+    pub pkg_list_filter_string: String,
+    pub pkg_list_compiled_filter: Option<PkgFilter>,
     md: MdContent,
     pub cm_cache: CommonMarkCache,
     pub show_sidebar: bool,
+}
+
+pub enum PkgFilter {
+    Simple(String),
+    Author(String),
+}
+
+impl PkgFilter {
+    pub fn from_str(src: &str) -> Self {
+        match src.split_once(':') {
+            Some(("auth" | "author" | "Auth" | "Author", query)) => {
+                Self::Author(query.trim().to_ascii_lowercase())
+            }
+            _ => Self::Simple(src.trim().to_ascii_lowercase()),
+        }
+    }
+    pub fn matches(&self, pkg: &Pkg) -> bool {
+        match self {
+            PkgFilter::Simple(query) => {
+                pkg.cm_pkg.name.contains(query)
+                    || pkg
+                        .cm_pkg
+                        .description
+                        .as_ref()
+                        .is_some_and(|desc| desc.to_ascii_lowercase().contains(query))
+                    || pkg.cm_pkg.keywords.iter().any(|kw| kw.contains(query))
+            }
+            PkgFilter::Author(query) => {
+                pkg.cm_pkg.authors.iter().any(|auth| auth.to_ascii_lowercase().contains(query))
+            }
+        }
+    }
 }
 
 /// Markdown content
@@ -111,7 +144,8 @@ impl Gui {
             // Arbitrary value: Can't be 0., that causes a panic in egui.
             // Also can't call `Context::available_width` at this point, also causes panic.
             right_panel_left: 100.,
-            pkg_list_filter: String::new(),
+            pkg_list_filter_string: String::new(),
+            pkg_list_compiled_filter: None,
             md: MdContent::default(),
             cm_cache: CommonMarkCache::default(),
             show_sidebar: true,
