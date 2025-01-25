@@ -19,7 +19,7 @@ pub(crate) fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gu
             )
             .changed()
         {
-            gui.pkg_list_compiled_filter = Some(PkgFilter::from_str(&gui.pkg_list_filter_string));
+            gui.pkg_list_compiled_filter = PkgFilter::from_str(&gui.pkg_list_filter_string);
         }
         filtered.retain(|key| {
             let pkg = &project.packages[*key];

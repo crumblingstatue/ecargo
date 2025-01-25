@@ -38,12 +38,15 @@ pub enum PkgFilter {
 }
 
 impl PkgFilter {
-    pub fn from_str(src: &str) -> Self {
+    pub fn from_str(src: &str) -> Option<Self> {
+        if src.trim().is_empty() {
+            return None;
+        }
         match src.split_once(':') {
             Some(("auth" | "author" | "Auth" | "Author", query)) => {
-                Self::Author(query.trim().to_ascii_lowercase())
+                Some(Self::Author(query.trim().to_ascii_lowercase()))
             }
-            _ => Self::Simple(src.trim().to_ascii_lowercase()),
+            _ => Some(Self::Simple(src.trim().to_ascii_lowercase())),
         }
     }
     pub fn matches(&self, pkg: &Pkg) -> bool {
