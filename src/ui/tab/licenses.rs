@@ -33,7 +33,10 @@ pub(crate) fn licenses_ui(ui: &mut egui::Ui, gui: &mut Gui, project: &mut Projec
             ui.collapsing(format!("{license} ({})", pkgs.len()), |ui| {
                 for pkg in pkgs {
                     let selected = gui.secondary_pkg == Some(*pkg);
-                    if ui.selectable_label(selected, &project.packages[*pkg].cm_pkg.name).clicked()
+                    let cm_pkg = &project.packages[*pkg].cm_pkg;
+                    if ui
+                        .selectable_label(selected, format!("{} {}", cm_pkg.name, cm_pkg.version))
+                        .clicked()
                     {
                         gui.secondary_pkg = Some(*pkg);
                     }
