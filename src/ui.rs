@@ -189,7 +189,7 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
             app.gui.modal_payload = None;
         }
     }
-    match &app.project {
+    match &mut app.project {
         Some(proj) => project_ui(proj, ctx, &mut app.gui, &mut app.config),
         None => {
             egui::CentralPanel::default().show(ctx, |ui| match &mut app.load {
@@ -237,11 +237,12 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
     }
 }
 
-pub fn project_ui(project: &Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
+pub fn project_ui(project: &mut Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
     egui::CentralPanel::default().show(ctx, |ui| match gui.tab {
         Tab::ViewSingle => tab::view_single_ui(ui, gui, project, cfg),
         Tab::PackageList => tab::package_list_ui(project, ui, gui),
         Tab::Markdown => tab::markdown_ui(ui, gui, project),
+        Tab::Licenses => tab::licenses_ui(ui, gui, project),
     });
     if let (Some(key), true) = (gui.secondary_pkg, gui.show_sidebar) {
         let re = egui::SidePanel::right("right_panel")
@@ -292,6 +293,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
                     &tab_str_buf
                 }
             }),
+            (Tab::Licenses, "Licenses"),
         ] {
             if ui
                 .selectable_label(

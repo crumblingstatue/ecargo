@@ -28,6 +28,7 @@ pub type PkgSlotMap = SlotMap<PkgKey, Pkg>;
 pub struct Project {
     pub packages: PkgSlotMap,
     pub root: Option<PkgKey>,
+    pub license_map: HashMap<String, Vec<PkgKey>>,
 }
 
 new_key_type! {
@@ -91,7 +92,11 @@ impl Project {
             }
             None => root = None,
         }
-        sender.send(LoadStage::Finished(Project { packages, root }))?;
+        sender.send(LoadStage::Finished(Project {
+            packages,
+            root,
+            license_map: HashMap::new(),
+        }))?;
         Ok(())
     }
 }
