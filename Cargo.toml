@@ -14,7 +14,7 @@ egui_commonmark = "0.20"
 slotmap = "1.0.7"
 cargo-platform = "0.1.5"
 open = "5.1.2"
-directories = "5.0.1"
+directories = "6.0.0"
 toml = "0.8.12"
 serde = { version = "1.0.199", features = ["derive"] }
 egui_extras = { version = "0.31", features = ["file", "http", "svg"] }
