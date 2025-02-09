@@ -9,15 +9,15 @@ repository = "https://github.com/crumblingstatue/ecargo"
 [dependencies]
 anyhow = "1.0.82"
 cargo_metadata = "0.19.1"
-eframe = "0.30"
-egui_commonmark = "0.19"
+eframe = "0.31"
+egui_commonmark = "0.20"
 slotmap = "1.0.7"
 cargo-platform = "0.1.5"
 open = "5.1.2"
 directories = "5.0.1"
 toml = "0.8.12"
 serde = { version = "1.0.199", features = ["derive"] }
-egui_extras = { version = "0.30", features = ["file", "http", "svg"] }
+egui_extras = { version = "0.31", features = ["file", "http", "svg"] }
 image = { version = "0.25.1", features = ["png"] }
 clap = { version = "4.5.4", features = ["derive"] }
 
