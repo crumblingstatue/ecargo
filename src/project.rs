@@ -1,8 +1,8 @@
 use {
     crate::app::{LoadSend, LoadStage},
-    cargo_metadata::{camino::Utf8PathBuf, CargoOpt, DependencyKind, MetadataCommand, Package},
+    cargo_metadata::{CargoOpt, DependencyKind, MetadataCommand, Package, camino::Utf8PathBuf},
     cargo_platform::Platform,
-    slotmap::{new_key_type, SlotMap},
+    slotmap::{SlotMap, new_key_type},
     std::{collections::HashMap, path::Path},
 };
 

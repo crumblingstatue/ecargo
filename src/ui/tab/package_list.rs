@@ -2,7 +2,7 @@ use {
     super::Tab,
     crate::{
         project::Project,
-        ui::{central_top_bar, widgets::VersionBadge, Gui, PkgFilter},
+        ui::{Gui, PkgFilter, central_top_bar, widgets::VersionBadge},
     },
     eframe::egui,
 };

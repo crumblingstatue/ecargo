@@ -1,9 +1,9 @@
 use {
-    self::widgets::{badge, DepkindBadge, VersionBadge},
+    self::widgets::{DepkindBadge, VersionBadge, badge},
     crate::{
         app::{App, LoadStage},
         config::Config,
-        project::{dep_matches_pkg, Pkg, PkgKey, PkgSlotMap, Project},
+        project::{Pkg, PkgKey, PkgSlotMap, Project, dep_matches_pkg},
         style::{Colors, Style},
     },
     eframe::egui::{self, Align2},

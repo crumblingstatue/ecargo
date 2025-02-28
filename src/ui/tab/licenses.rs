@@ -1,7 +1,7 @@
 use {
     crate::{
         project::Project,
-        ui::{central_top_bar, Gui},
+        ui::{Gui, central_top_bar},
     },
     eframe::egui,
     std::collections::hash_map::Entry,

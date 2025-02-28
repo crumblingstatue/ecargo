@@ -7,7 +7,7 @@ mod ui;
 use {
     app::App,
     clap::Parser,
-    eframe::{egui, NativeOptions},
+    eframe::{NativeOptions, egui},
     std::path::PathBuf,
 };
 

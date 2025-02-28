@@ -1,6 +1,6 @@
 use {
     crate::style::Style,
-    cargo_metadata::{semver::Version, DependencyKind},
+    cargo_metadata::{DependencyKind, semver::Version},
     eframe::egui,
 };
 

@@ -2,7 +2,7 @@ use {
     crate::{
         config::Config,
         project::{Pkg, Project},
-        ui::{central_top_bar, pkg_info_ui, Gui},
+        ui::{Gui, central_top_bar, pkg_info_ui},
     },
     eframe::egui,
 };
