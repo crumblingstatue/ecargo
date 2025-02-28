@@ -348,7 +348,7 @@ fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
             ui,
             "optional",
             egui::Color32::DARK_GREEN,
-            egui::Color32::LIGHT_GREEN,
+            egui::Color32::WHITE,
         );
     }
 }
