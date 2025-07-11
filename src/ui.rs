@@ -335,7 +335,7 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
 
 fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
     if let Some(source) = &dep.source {
-        if let Some(suffix) = source.strip_prefix("git+") {
+        if let Some(suffix) = source.repr.strip_prefix("git+") {
             badge(ui, "git", egui::Color32::DARK_GREEN, egui::Color32::YELLOW)
                 .on_hover_text(suffix);
         }
@@ -356,7 +356,7 @@ fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
 fn pkg_info_ui(ui: &mut egui::Ui, pkg: &Pkg, packages: &PkgSlotMap, gui: &mut Gui, cfg: &Config) {
     ui.horizontal(|ui| {
         ui.label(
-            egui::RichText::new(&pkg.cm_pkg.name)
+            egui::RichText::new(pkg.cm_pkg.name.as_str())
                 .heading()
                 .color(gui.style.colors.highlighted_text),
         );
@@ -509,7 +509,7 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
         cheader("Features", &gui.style).show(ui, |ui| {
             egui::Grid::new("feat_grid").striped(true).show(ui, |ui| {
                 for (name, reqs) in &pkg.cm_pkg.features {
-                    let enabled = pkg.enabled_features.contains(name);
+                    let enabled = pkg.enabled_features.iter().any(|feat| feat.as_str() == name);
                     if enabled {
                         ui.label("☑").on_hover_text("enabled");
                     } else {
@@ -533,7 +533,7 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                     let dpkg = &packages[link.pkg_key];
                     let re = ui.selectable_label(
                         false,
-                        egui::RichText::new(&dpkg.cm_pkg.name)
+                        egui::RichText::new(dpkg.cm_pkg.name.as_str())
                             .color(gui.style.colors.highlighted_text),
                     );
                     if re.clicked() {
@@ -562,7 +562,7 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                         ui.scope(|ui| {
                             let re = ui.selectable_label(
                                 gui.secondary_pkg == Some(pkg.key),
-                                egui::RichText::new(&pkg.cm_pkg.name)
+                                egui::RichText::new(pkg.cm_pkg.name.as_str())
                                     .color(gui.style.colors.highlighted_text)
                                     .strong(),
                             );

@@ -2,6 +2,7 @@ use {
     crate::app::{LoadSend, LoadStage},
     cargo_metadata::{CargoOpt, DependencyKind, MetadataCommand, Package, camino::Utf8PathBuf},
     cargo_platform::Platform,
+    cargo_util_schemas::manifest::FeatureName,
     slotmap::{SlotMap, new_key_type},
     std::{collections::HashMap, path::Path},
 };
@@ -17,7 +18,7 @@ pub struct Pkg {
     pub key: PkgKey,
     pub dependents: Vec<DepLink>,
     pub dependencies: Vec<DepLink>,
-    pub enabled_features: Vec<String>,
+    pub enabled_features: Vec<FeatureName>,
     pub manifest_dir: Utf8PathBuf,
     pub readme_path: Option<Utf8PathBuf>,
     pub changelog_path: Option<Utf8PathBuf>,
@@ -102,7 +103,7 @@ impl Project {
 }
 
 pub fn dep_matches_pkg(dep: &cargo_metadata::Dependency, pkg: &Pkg) -> bool {
-    pkg.cm_pkg.name == dep.name && dep.req.matches(&pkg.cm_pkg.version)
+    pkg.cm_pkg.name.as_str() == dep.name.as_str() && dep.req.matches(&pkg.cm_pkg.version)
 }
 
 // When I made this I didn't realize `cargo_metadata` supplied this information through `resolve`,

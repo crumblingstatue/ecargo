@@ -46,7 +46,7 @@ pub(crate) fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gu
                     ui.scope(|ui| {
                         let re = ui.selectable_label(
                             gui.secondary_pkg == Some(key),
-                            egui::RichText::new(&pkg.cm_pkg.name)
+                            egui::RichText::new(pkg.cm_pkg.name.as_str())
                                 .color(gui.style.colors.highlighted_text),
                         );
                         if re.clicked() {
