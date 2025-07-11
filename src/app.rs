@@ -52,7 +52,7 @@ impl App {
                 crate::style::apply_style(egui_ctx, style.clone());
                 app.gui.style = style;
             }
-            None => eprintln!("No such style: {}", style_name),
+            None => eprintln!("No such style: {style_name}"),
         }
         Ok(app)
     }
