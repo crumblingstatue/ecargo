@@ -575,7 +575,6 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                                     .clicked()
                                 {
                                     gui.primary_pkg = Some(pkg.key);
-                                    ui.close_menu();
                                 }
                             });
                             if re.clicked() {
