@@ -59,10 +59,10 @@ pub(crate) fn package_list_ui(project: &Project, ui: &mut egui::Ui, gui: &mut Gu
                         }
                         ui.add(VersionBadge::new(&pkg.cm_pkg.version, &gui.style));
                     });
-                    if let Some(info) = &pkg.cm_pkg.description {
-                        if let Some(fst_line) = info.lines().next() {
-                            ui.label(fst_line).on_hover_text(info);
-                        }
+                    if let Some(info) = &pkg.cm_pkg.description
+                        && let Some(fst_line) = info.lines().next()
+                    {
+                        ui.label(fst_line).on_hover_text(info);
                     }
                     ui.end_row();
                 }

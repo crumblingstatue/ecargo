@@ -334,11 +334,10 @@ fn central_top_bar(ui: &mut egui::Ui, gui: &mut Gui, project: &Project) {
 }
 
 fn additional_dep_info_ui(dep: &cargo_metadata::Dependency, ui: &mut egui::Ui) {
-    if let Some(source) = &dep.source {
-        if let Some(suffix) = source.repr.strip_prefix("git+") {
-            badge(ui, "git", egui::Color32::DARK_GREEN, egui::Color32::YELLOW)
-                .on_hover_text(suffix);
-        }
+    if let Some(source) = &dep.source
+        && let Some(suffix) = source.repr.strip_prefix("git+")
+    {
+        badge(ui, "git", egui::Color32::DARK_GREEN, egui::Color32::YELLOW).on_hover_text(suffix);
     }
     if let Some(target) = &dep.target {
         ui.label(target.to_string());
