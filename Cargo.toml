@@ -3,22 +3,22 @@ name = "ecargo"
 description = "Cargo metadata viewer using egui"
 version = "0.3.0-dev"
 edition = "2024"
-rust-version = "1.86"
+rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/crumblingstatue/ecargo"
 
 [dependencies]
 anyhow = "1.0.82"
 cargo_metadata = "0.23.1"
-eframe = "0.32"
-egui_commonmark = "0.21"
+eframe = "0.33"
+egui_commonmark = "0.22"
 slotmap = "1.0.7"
 cargo-platform = "0.3.2"
 open = "5.1.2"
 directories = "6.0.0"
 toml = "0.9.2"
 serde = { version = "1.0.199", features = ["derive"] }
-egui_extras = { version = "0.32", features = ["file", "http", "svg"] }
+egui_extras = { version = "0.33", features = ["file", "http", "svg"] }
 image = { version = "0.25.1", features = ["png"] }
 clap = { version = "4.5.4", features = ["derive"] }
 
