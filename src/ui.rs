@@ -510,7 +510,28 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
                 for (name, reqs) in &pkg.cm_pkg.features {
                     let enabled = pkg.enabled_features.iter().any(|feat| feat.as_str() == name);
                     if enabled {
-                        ui.label("☑").on_hover_text("enabled");
+                        ui.label("☑").on_hover_ui(|ui| {
+                            ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                            ui.strong("Enabled by");
+                            let mut any = false;
+                            for link in &pkg.dependents {
+                                if link.features.contains(name)
+                                    || is_enabled_default_feature(pkg, name, link)
+                                {
+                                    any = true;
+                                    let pkg = &packages[link.pkg_key];
+                                    ui.label(format!(
+                                        "{} [{}]",
+                                        pkg.cm_pkg.name.as_str(),
+                                        link.kind
+                                    ));
+                                }
+                            }
+                            // TODO: Implement this properly so this doesn't happen
+                            if !any {
+                                ui.label("Whoops, this is a bug");
+                            }
+                        });
                     } else {
                         ui.label("☐").on_hover_text("disabled");
                     }
@@ -604,6 +625,12 @@ fn pkg_info_collapsibles_ui(pkg: &Pkg, gui: &mut Gui, ui: &mut egui::Ui, package
             });
         });
     }
+}
+
+fn is_enabled_default_feature(pkg: &Pkg, name: &String, link: &crate::project::DepLink) -> bool {
+    link.default_features
+        && (name == "default"
+            || pkg.cm_pkg.features.get("default").is_some_and(|feats| feats.contains(name)))
 }
 
 fn cheader(label: &str, style: &crate::style::Style) -> egui::CollapsingHeader {

@@ -12,6 +12,8 @@ pub struct DepLink {
     pub pkg_key: PkgKey,
     pub kind: DependencyKind,
     pub target: Option<Platform>,
+    pub features: Vec<String>,
+    pub default_features: bool,
 }
 
 pub struct Pkg {
@@ -124,11 +126,15 @@ fn gen_dep_graph_info(pkgs: &mut PkgSlotMap) {
                         pkg_key: *b,
                         kind: dep.kind,
                         target: dep.target.clone(),
+                        features: dep.features.clone(),
+                        default_features: dep.uses_default_features,
                     });
                     pkg_b.dependents.push(DepLink {
                         pkg_key: *a,
                         kind: dep.kind,
                         target: dep.target.clone(),
+                        features: dep.features.clone(),
+                        default_features: dep.uses_default_features,
                     });
                 }
             }
