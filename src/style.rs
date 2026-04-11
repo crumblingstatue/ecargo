@@ -137,7 +137,7 @@ pub fn apply_style(egui_ctx: &egui::Context, style: Style) {
         }
     }
     egui_ctx.set_fonts(font_defs);
-    egui_ctx.style_mut(|egui_style| {
+    egui_ctx.global_style_mut(|egui_style| {
         egui_style.text_styles.get_mut(&egui::TextStyle::Heading).unwrap().size = 24.0;
         egui_style.text_styles.get_mut(&egui::TextStyle::Body).unwrap().size = 16.0;
         egui_style.text_styles.get_mut(&egui::TextStyle::Button).unwrap().size = 16.0;

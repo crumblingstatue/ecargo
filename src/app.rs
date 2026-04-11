@@ -81,7 +81,7 @@ impl Drop for App {
 }
 
 impl eframe::App for App {
-    fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
-        crate::ui::do_ui(self, ctx);
+    fn ui(&mut self, ui: &mut eframe::egui::Ui, _frame: &mut eframe::Frame) {
+        crate::ui::do_ui(self, ui);
     }
 }

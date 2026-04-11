@@ -162,10 +162,10 @@ impl Gui {
     }
 }
 
-pub fn do_ui(app: &mut App, ctx: &egui::Context) {
+pub fn do_ui(app: &mut App, ui: &mut egui::Ui) {
     if let Some(payload) = &app.gui.modal_payload {
         let mut close = false;
-        egui::Modal::new("modal_popup".into()).show(ctx, |ui| {
+        egui::Modal::new("modal_popup".into()).show(ui, |ui| {
             let (enter, esc) = ui.input(|inp| {
                 (
                     inp.key_pressed(egui::Key::Enter),
@@ -190,9 +190,9 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
         }
     }
     match &mut app.project {
-        Some(proj) => project_ui(proj, ctx, &mut app.gui, &mut app.config),
+        Some(proj) => project_ui(proj, ui, &mut app.gui, &mut app.config),
         None => {
-            egui::CentralPanel::default().show(ctx, |ui| match &mut app.load {
+            egui::CentralPanel::default().show_inside(ui, |ui| match &mut app.load {
                 Some(load) => {
                     ui.label(format!("Loading project at \"{}\"...", load.path.display()));
                     ui.label(&load.msg);
@@ -227,7 +227,7 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
                             }
                         },
                     }
-                    ctx.request_repaint();
+                    ui.request_repaint();
                 }
                 None => {
                     ui.label("No project loaded");
@@ -237,25 +237,25 @@ pub fn do_ui(app: &mut App, ctx: &egui::Context) {
     }
 }
 
-pub fn project_ui(project: &mut Project, ctx: &egui::Context, gui: &mut Gui, cfg: &mut Config) {
-    egui::CentralPanel::default().show(ctx, |ui| match gui.tab {
-        Tab::ViewSingle => tab::view_single_ui(ui, gui, project, cfg),
-        Tab::PackageList => tab::package_list_ui(project, ui, gui),
-        Tab::Markdown => tab::markdown_ui(ui, gui, project),
-        Tab::Licenses => tab::licenses_ui(ui, gui, project),
-    });
+pub fn project_ui(project: &mut Project, ui: &mut egui::Ui, gui: &mut Gui, cfg: &mut Config) {
     if let (Some(key), true) = (gui.secondary_pkg, gui.show_sidebar) {
-        let re = egui::SidePanel::right("right_panel")
-            .max_width(ctx.available_rect().width() / 2.5)
-            .show(ctx, |ui| {
+        let re = egui::Panel::right("right_panel")
+            .max_size(ui.content_rect().width() / 2.5)
+            .show_inside(ui, |ui| {
                 let pkg = &project.packages[key];
                 pkg_info_ui(ui, pkg, &project.packages, gui, cfg);
             });
         gui.right_panel_left = re.response.rect.left();
     } else {
-        gui.right_panel_left = ctx.available_rect().width();
+        gui.right_panel_left = ui.content_rect().width();
     }
-    gui.settings_window.ui(ctx, &mut gui.style, cfg);
+    egui::CentralPanel::default().show_inside(ui, |ui| match gui.tab {
+        Tab::ViewSingle => tab::view_single_ui(ui, gui, project, cfg),
+        Tab::PackageList => tab::package_list_ui(project, ui, gui),
+        Tab::Markdown => tab::markdown_ui(ui, gui, project),
+        Tab::Licenses => tab::licenses_ui(ui, gui, project),
+    });
+    gui.settings_window.ui(ui, &mut gui.style, cfg);
 }
 
 fn markdown_tab_label(kind: MdContentKind, pkgname: &str) -> String {
